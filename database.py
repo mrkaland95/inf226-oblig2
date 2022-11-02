@@ -39,12 +39,26 @@ def add_user_to_database(user_to_add, password_to_add):
     try:
         conn = apsw.Connection(main.DATABASE_NAME)
         c = conn.cursor()
-        c.execute('INSERT INTO users (user_name, password) VALUES (?, ?)', )
+        c.execute('INSERT INTO users (user_name, password) VALUES (?, ?)', (user_to_add, password_to_add))
 
     except apsw.Error as e:
         print(e)
         sys.exit(1)
-    temp = 0
+
+def get_user_from_database(user):
+    try:
+        conn = apsw.Connection(main.DATABASE_NAME)
+        c = conn.cursor()
+        c.execute('''
+        SELECT user
+        FROM users
+        WHERE (user_name)''')
+
+    except apsw.Error as e:
+        print(e)
+        sys.exit(1)
+
+
 
 
 def get_users_messages():
@@ -55,6 +69,7 @@ def get_users_messages():
         print(err)
         main.app.logger.critical(f'There was a critical error when trying to access the database')
         sys.exit(1)
-    temp = 0
 
-init_database()
+if __name__ == '__main__':
+    a = 0
+    add_user_to_database('test', 'test')

@@ -27,3 +27,10 @@ pip install bcrypt
 pip install flask_login
 pip install flask
 pip install wtforms
+
+# Currently working on: Login
+
+# TODO 1. Add a way to register an user.
+# TODO 2. Add a way to logout a user.
+# TODO 3. Implement the instant mesaging system.
+# TODO if i have the time, set up a setup.py script for packages.
