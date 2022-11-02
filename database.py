@@ -1,7 +1,7 @@
 import sys
 import apsw
 import hashlib
-import main
+import app
 import bcrypt
 
 

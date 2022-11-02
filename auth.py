@@ -4,7 +4,7 @@ import secrets
 import bcrypt
 import flask
 import flask_login
-import main
+import app
 from http import HTTPStatus
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
