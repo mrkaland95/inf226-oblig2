@@ -6,7 +6,17 @@ Database etc.
 
 
 1. Use the python "secrets" library to generate a cryptographically secure secret key for the app.
-2. Added a new table for users
+2. Added a new table for users - Done
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -34,3 +44,8 @@ pip install wtforms
 # TODO 2. Add a way to logout a user.
 # TODO 3. Implement the instant mesaging system.
 # TODO if i have the time, set up a setup.py script for packages.
+
+
+Sources used:
+
+https://flask.palletsprojects.com/en/2.2.x/tutorial/templates/#register-a-user
