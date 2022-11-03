@@ -6,7 +6,7 @@ from http import HTTPStatus
 import bcrypt
 from flask import Flask, abort, request, send_from_directory, make_response, render_template
 from werkzeug.datastructures import WWWAuthenticate
-from login_form import LoginForm
+from forms import LoginForm
 from json import dumps, loads
 from base64 import b64decode
 from apsw import Error
@@ -24,6 +24,7 @@ import apsw
 
 inject = "'; insert into messages (sender,message) values ('foo', 'bar');select '"
 cssData = HtmlFormatter(nowrap=True).get_style_defs('.highlight')
+
 
 # Set up app
 app = Flask(__name__)
@@ -155,12 +156,12 @@ def request_loader(request):
 
 @app.route('/favicon.ico')
 def favicon_ico():
-    return send_from_directory(app.root_path, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_from_directory(app.root_path, './resources/favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 @app.route('/favicon.png')
 def favicon_png():
-    return send_from_directory(app.root_path, 'favicon.png', mimetype='image/png')
+    return send_from_directory(app.root_path, './resources/favicon.png', mimetype='image/png')
 
 
 @app.route('/')
@@ -168,7 +169,7 @@ def favicon_png():
 @login_required
 def index_html():
     return send_from_directory(app.root_path,
-                               'index.html', mimetype='text/html')
+                               'templates/index.html', mimetype='text/html')
 
 
 def add_new_user_to_database(user_to_add, password_to_add):
@@ -237,7 +238,7 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    redirect_on_failure = render_template('./login.html', form=form)
+    redirect_on_failure = render_template('./auth/login.html', form=form)
     if form.is_submitted():
         print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
         print(request.form)
@@ -256,7 +257,7 @@ def login():
     user = user_loader(username)
 
     # automatically sets logged in session cookie
-    login_user(user)
+    logged_user = login_user(user)
 
     flask.flash('Logged in successfully.')
 
@@ -339,29 +340,6 @@ def highlightStyle():
     return resp
 
 
-
-try:
-    connection = apsw.Connection(DATABASE_NAME)
-    cursor = connection.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS messages (
-        id integer PRIMARY KEY, 
-        sender TEXT NOT NULL,
-        message TEXT NOT NULL);''')
-
-    cursor.execute('''CREATE TABLE IF NOT EXISTS announcements (
-        id integer PRIMARY KEY, 
-        author TEXT NOT NULL,
-        text TEXT NOT NULL);''')
-
-    cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-        id integer PRIMARY KEY,
-        user_name TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL);''')
-except apsw.Error as e:
-    print(e)
-    sys.exit(1)
-
-
 def init_database():
     """
     Initialises the database if it doesen't exist and adds fields.
@@ -371,30 +349,26 @@ def init_database():
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS messages (
-            id integer PRIMARY KEY, 
-            sender TEXT NOT NULL,
-            message TEXT NOT NULL);''')
-
-        cursor.execute('''CREATE TABLE IF NOT EXISTS announcements (
-            id integer PRIMARY KEY, 
-            author TEXT NOT NULL,
-            text TEXT NOT NULL);''')
 
         cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-            id integer PRIMARY KEY,
+            user_id integer PRIMARY KEY,
             user_name TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL);''')
 
+        cursor.execute('''CREATE TABLE IF NOT EXISTS messages (
+            message_id integer PRIMARY KEY, 
+            sender TEXT NOT NULL,
+            message TEXT NOT NULL,
+            FOREIGN KEY (sender) REFERENCES users(user_name));''')
+
+        cursor.execute('''CREATE TABLE IF NOT EXISTS announcements (
+            announcement_id integer PRIMARY KEY, 
+            author TEXT NOT NULL,
+            text TEXT NOT NULL);''')
 
     except apsw.Error as e:
         print(e)
         sys.exit(1)
 
 
-# def main():
-#     init_database()
-#
-#
-# main()
-
+init_database()

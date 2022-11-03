@@ -105,9 +105,12 @@
     <dd>{{ form.username }}
     <dt>Password:
     <dd>{{ form.password }}
+    <dt>Confirm Password:
+    <dd>{{ form.confirm_password }}
+
   </dl>
   <p>
-    <input type=submit value=Login>
+    <input type=submit value=Register>
     <input type=hidden value="{{ next or '' }}" name=next>
 </form>
     </div>
