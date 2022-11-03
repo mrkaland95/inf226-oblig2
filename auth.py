@@ -1,13 +1,10 @@
-import os
-import pathlib
-import secrets
-import bcrypt
 import flask
 import flask_login
 import database
+from app import app
 from flask import abort, render_template, Blueprint, request
 from http import HTTPStatus
-from flask_login import LoginManager
+from flask_login import LoginManager, login_user
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from werkzeug.datastructures import WWWAuthenticate
@@ -32,8 +29,6 @@ users = {'alice': {'password': 'password123', 'token': 'tiktok'},
 auth = Blueprint('auth', __name__)
 
 
-
-
 # Class to store user info
 # UserMixin provides us with an `id` field and the necessary
 # methods (`is_authenticated`, `is_active`, `is_anonymous` and `get_id()`)
@@ -41,7 +36,7 @@ class User(flask_login.UserMixin):
     pass
 
 
-@app.route('/register')
+@auth.route('/register', methods=['GET', 'POST'])
 def register():
     print()
 
@@ -49,13 +44,13 @@ def register():
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    redirect_on_failure = render_template('./auth/login.html', form=form)
+    redirect_to_login = render_template('./auth/login.html', form=form)
     if form.is_submitted():
         print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
         print(request.form)
 
     if not form.validate_on_submit():
-        return redirect_on_failure
+        return redirect_to_login
 
     username = form.username.data
     password = form.password.data
@@ -63,7 +58,7 @@ def login():
     valid_login = database.validate_login(username, password)
 
     if not valid_login:
-        return redirect_on_failure
+        return redirect_to_login
 
     user = user_loader(username)
 
@@ -72,20 +67,21 @@ def login():
 
     flask.flash('Logged in successfully.')
 
-    next = flask.request.args.get('next')
+    next_request = flask.request.args.get('next')
 
+    # TODO have a look at this.
     # is_safe_url should check if the url is safe for redirects.
     # See http://flask.pocoo.org/snippets/62/ for an example.
-    if False and not is_safe_url(next):
+    if False and not is_safe_url(next_request):
         return flask.abort(400)
 
-    return flask.redirect(next or flask.url_for('index'))
+    return flask.redirect(next_request or flask.url_for('index'))
 
 
 # This method is called to get a User object based on a request,
 # for example, if using an api key or authentication token rather
 # than getting the user name the standard way (from the session cookie)
-@auth.login_manager.request_loader
+@app.login_manager.request_loader
 def request_loader(request):
     # Even though this HTTP header is primarily used for *authentication*
     # rather than *authorization*, it's still called "Authorization".
@@ -127,22 +123,10 @@ def request_loader(request):
     flask.abort(HTTPStatus.UNAUTHORIZED, www_authenticate=WWWAuthenticate('Basic realm=inf226, Bearer'))
 
 
-@login_manager.user_loader
-def user_loader(user_id):
-    # TODO 1. chance this to load a user from a database. Including hashing and salting.
-    if user_id not in users:
-        return
-
-    # For a real app, we would load the User from a database or something
-    user = User()
-    user.id = user_id
-    return user
-
-
 # This method is called to get a User object based on a request,
 # for example, if using an api key or authentication token rather
 # than getting the user name the standard way (from the session cookie)
-@login_manager.request_loader
+@app.login_manager.request_loader
 def request_loader(request):
     # Even though this HTTP header is primarily used for *authentication*
     # rather than *authorization*, it's still called "Authorization".
@@ -184,30 +168,16 @@ def request_loader(request):
     abort(HTTPStatus.UNAUTHORIZED, www_authenticate=WWWAuthenticate('Basic realm=inf226, Bearer'))
 
 
-@login_manager.user_loader
+@app.login_manager.user_loader
 def user_loader(user_name):
     # THIS IS ONLY CALLED IF THE USER IS ALREADY AUTHENTICATED
-    found_user = None
-    try:
-        connection = apsw.Connection(DATABASE_NAME)
-        cursor = connection.cursor()
-        found_user = cursor.execute('''
-        SELECT *
-        FROM users
-        WHERE (user_name) = (?)
-        ''', (user_name,))
-    except apsw.Error as err:
-        print(err)
+    found_user = database.get_user_data_from_db(user_name)
 
     if not found_user:
         return found_user
 
-    # print(found_user.fetchall())
-    # For a real app, we would load the User from a database or something
-    e = list(cursor)
     user = User()
-    # user.id = user_name
-    user.id = e
+    user.id = found_user.fetchone()[0]
     return user
 
 class LoginForm(FlaskForm):
@@ -216,47 +186,5 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Submit')
 
 
-def get_secret_key(file_path: pathlib.Path):
-    if not os.path.exists(file_path):
-        # If the secret file does not exist, generate a new one,
-        # store it in the flask object and write to file
-        # Generates a 256 bit long secret key.
-        with file_path.open("w") as secret_file:
-            secret_key = secrets.token_hex(32)
-            secret_file.write(secret_key)
-    else:
-        with file_path.open("r") as secret_file:
-            secret_key = secret_file.read()
-    return secret_key
 
-def create_hashed_and_salted_password(plaintext_password):
-    """
 
-    :param plaintext_password:
-    :return:
-    """
-    # Bcrypt generates and inserts the salt into the password itself.
-    return bcrypt.hashpw(plaintext_password, bcrypt.gensalt())
-
-def check_password(plaintext_password: str | bytes, hashed_password: str | bytes) -> bool:
-    """
-    :param plaintext_password: The plaintext password string.
-    :param hashed_password:
-    :return: A bool of whether the password matched.
-    """
-    if isinstance(plaintext_password, str):
-        plaintext_password = bytes(plaintext_password)
-    if isinstance(hashed_password, str):
-        plaintext_password = bytes(plaintext_password)
-    return bcrypt.checkpw(plaintext_password, hashed_password)
-
-def pygmentize(text):
-    tls = local()
-    if not hasattr(tls, 'formatter'):
-        tls.formatter = HtmlFormatter(nowrap=True)
-    if not hasattr(tls, 'lexer'):
-        tls.lexer = SqlLexer()
-        tls.lexer.add_filter(NameHighlightFilter(names=['GLOB'], tokentype=token.Keyword))
-        tls.lexer.add_filter(NameHighlightFilter(names=['text'], tokentype=token.Name))
-        tls.lexer.add_filter(KeywordCaseFilter(case='upper'))
-    return f'<span class="highlight">{highlight(text, tls.lexer, tls.formatter)}</span>'

@@ -1,25 +1,20 @@
-import os
 import pathlib
-import secrets
-import bcrypt
-import auth
-import flask
-import sys
-import apsw
-import flask_login
-from flask import Flask, abort, request, send_from_directory, make_response, render_template
-from werkzeug.datastructures import WWWAuthenticate
-from http import HTTPStatus
-import database
-from json import dumps, loads
+from database import init_db
+from utils import get_secret_key
+from auth import auth
+from routes import routes
+from flask import Flask
 from flask_login import LoginManager
 
-users = {'alice': {'password': 'password123', 'token': 'tiktok'},
-         'bob': {'password': 'bananas'}
-         }
+"""
+File that works as the entry point for the app.
+"""
+
+# This is defined here, as per the documentation you can instantiate it once
+# and then bind it to the various blueprints.
 
 
-def main():
+def create_app():
     """
     Initializes the actual app.
     :return:
@@ -28,34 +23,21 @@ def main():
     app = Flask(__name__)
     # The secret key enables storing encrypted session data in a cookie (make a secure random key for this!)
     secret_key_path = pathlib.Path('/.secret_key')
-    app.secret_key = auth.get_secret_key(secret_key_path)
-    database.init_db()
+    app.secret_key = get_secret_key(secret_key_path)
+    init_db()
+    app.register_blueprint(auth.auth)
+    app.register_blueprint(routes.routes)
     return app
 
 
+if __name__ == '__main__':
+    app = create_app()
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.auth'
+    login_manager.login_message_category = 'info'
 
-# This method is called whenever the login manager needs to get
-# the User object for a given user id
 
-
-
-@app.get('/search')
-def search():
-    # FIXME SQL injection possible here
-    query = request.args.get('q') or request.form.get('q') or '*'
-    stmt = f"SELECT * FROM messages WHERE message GLOB '{query}'"
-    result = f"Query: {pygmentize(stmt)}\n"
-    try:
-        connection = apsw.Connection(DATABASE_NAME)
-        c = connection.execute(stmt)
-        rows = c.fetchall()
-        result = result + 'Result:\n'
-        for row in rows:
-            result = f'{result}    {dumps(row)}\n'
-        c.close()
-        return result
-    except apsw.Error as e:
-        return f'{result}ERROR: {e}', 500
 
 
 

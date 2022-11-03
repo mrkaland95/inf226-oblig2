@@ -1,25 +1,11 @@
-Changes made 1.
-
 Preliminary plan:
 Split the "App.py" script into multiple different files that handles specific aspects. For example "auth" and/or "login",
 Database etc.
 
+Part 2A:
 
 1. Use the python "secrets" library to generate a cryptographically secure secret key for the app.
 2. Added a new table for users - Done
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 For storing passwords in the database, i used the "bcrypt" library, which simplies the hashing and salting off passwords.
@@ -45,7 +31,18 @@ pip install wtforms
 # TODO 3. Implement the instant mesaging system.
 # TODO if i have the time, set up a setup.py script for packages.
 
+# The structure could have an impact on the security
+# beacuse it's hard to keep an overview of everything when it's structured in a single file.
+# Another issue with the structure, is that 
+
+
+
+
+
+
+
+
 
 Sources used:
-
 https://flask.palletsprojects.com/en/2.2.x/tutorial/templates/#register-a-user
+https://flask.palletsprojects.com/en/2.2.x/blueprints/

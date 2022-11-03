@@ -1,11 +1,18 @@
-import flask
 import forms
+import apsw
+import flask
+import utils
+from flask import abort, make_response, request
+from json import dumps
+from pygments.formatters import HtmlFormatter
+from markupsafe import escape
+from database import DATABASE_NAME
+
 
 """
 File for handling the URL routes.
 """
 
-from pygments.formatters import HtmlFormatter
 routes = flask.Blueprint('routes', __name__)
 cssData = HtmlFormatter(nowrap=True).get_style_defs('.highlight')
 
@@ -54,10 +61,11 @@ def send():
         cursor = connection.cursor()
         sender = request.args.get('sender') or request.form.get('sender')
         message = request.args.get('message') or request.args.get('message')
+        # FIXME this has an SQL Injection vulnerability.
         if not sender or not message:
             return f'ERROR: missing sender or message'
         stmt = f"INSERT INTO messages (sender, message) values ('{sender}', '{message}');"
-        result = f"Query: {pygmentize(stmt)}\n"
+        result = f"Query: {utils.pygmentize(stmt)}\n"
         cursor.execute(stmt)
         return f'{result}ok'
     except apsw.Error as e:
@@ -70,14 +78,14 @@ def search():
     # FIXME SQL injection possible here
     query = request.args.get('q') or request.form.get('q') or '*'
     stmt = f"SELECT * FROM messages WHERE message GLOB '{query}'"
-    result = f"Query: {pygmentize(stmt)}\n"
+    result = f"Query: {utils.pygmentize(stmt)}\n"
     try:
         connection = apsw.Connection(DATABASE_NAME)
         c = connection.execute(stmt)
         rows = c.fetchall()
         result = result + 'Result:\n'
         for row in rows:
-            result = f'{result}    {dumps(row)}\n'
+            result = f'{result}   {dumps(row)}\n'
         c.close()
         return result
     except apsw.Error as e:
@@ -86,15 +94,21 @@ def search():
 
 @routes.route('/send', methods=['POST', 'GET'])
 def send():
+    """
+    Route responsible for sending a message.
+
+    :return:
+    """
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
         sender = request.args.get('sender') or request.form.get('sender')
         message = request.args.get('message') or request.args.get('message')
+        # FIXME this has an SQL injection vuln.
         if not sender or not message:
             return f'ERROR: missing sender or message'
         stmt = f"INSERT INTO messages (sender, message) values ('{sender}', '{message}');"
-        result = f"Query: {pygmentize(stmt)}\n"
+        result = f"Query: {utils.pygmentize(stmt)}\n"
         cursor.execute(stmt)
         return f'{result}ok'
     except apsw.Error as e:
@@ -112,7 +126,7 @@ def announcements():
         for row in c:
             anns.append({'sender': escape(row[0]), 'message': escape(row[1])})
         return {'data': anns}
-    except Error as e:
+    except apsw.Error as e:
         return {'error': f'{e}'}
 
 
@@ -131,13 +145,3 @@ def highlightStyle():
     resp.content_type = 'text/css'
     return resp
 
-def pygmentize(text):
-    tls = local()
-    if not hasattr(tls, 'formatter'):
-        tls.formatter = HtmlFormatter(nowrap=True)
-    if not hasattr(tls, 'lexer'):
-        tls.lexer = SqlLexer()
-        tls.lexer.add_filter(NameHighlightFilter(names=['GLOB'], tokentype=token.Keyword))
-        tls.lexer.add_filter(NameHighlightFilter(names=['text'], tokentype=token.Name))
-        tls.lexer.add_filter(KeywordCaseFilter(case='upper'))
-    return f'<span class="highlight">{highlight(text, tls.lexer, tls.formatter)}</span>'

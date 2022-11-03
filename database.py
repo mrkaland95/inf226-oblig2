@@ -6,6 +6,10 @@ import bcrypt
 
 DATABASE_NAME = './tiny.db'
 
+"""
+File for handling the database logic:
+Initialization, requests from the database, insertions etc.
+"""
 
 
 def init_db():
@@ -17,22 +21,22 @@ def init_db():
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS users (
-            user_id integer PRIMARY KEY AUTOINCREMENT ,
-            user_name TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL);''')
+        cursor.execute('''  CREATE TABLE IF NOT EXISTS users (
+            user_id         integer PRIMARY KEY AUTOINCREMENT ,
+            user_name       TEXT UNIQUE NOT NULL,
+            password        TEXT NOT NULL);''')
 
-        cursor.execute('''CREATE TABLE IF NOT EXISTS messages (
-            message_id integer PRIMARY KEY AUTOINCREMENT,
-            sender_id INTEGER NOT NULL,
-            created_time NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        cursor.execute('''  CREATE TABLE IF NOT EXISTS messages (
+            message_id      integer PRIMARY KEY AUTOINCREMENT,
+            sender_id       INTEGER NOT NULL,
+            created_time    NOT NULL DEFAULT CURRENT_TIMESTAMP,
             message_content TEXT NOT NULL,
             FOREIGN KEY (sender_id) REFERENCES users(user_id));''')
 
-        cursor.execute('''CREATE TABLE IF NOT EXISTS announcements (
+        cursor.execute('''  CREATE TABLE IF NOT EXISTS announcements (
             announcement_id integer PRIMARY KEY AUTOINCREMENT, 
-            author TEXT NOT NULL,
-            text TEXT NOT NULL);''')
+            author          TEXT NOT NULL,
+            text            TEXT NOT NULL);''')
 
     except apsw.Error as e:
         print(e)
@@ -47,30 +51,31 @@ def add_user_to_db(user_to_add, password_to_add):
     :param password_to_add:
     :return:
     """
-    succesfull = False
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
-        cursor.execute('INSERT INTO users (user_name, password)'
-                       'VALUES (?, ?)', (user_to_add, password_to_add))
-        succesfull = True
+        cursor.execute('''INSERT INTO users (user_name, password)
+                          VALUES (?, ?);''', (user_to_add, password_to_add))
+        successful = True
     except apsw.Error as e:
         print(e)
         sys.exit(1)
-    return succesfull
+    return successful
+
 
 def get_user_data_from_db(user):
+    found_user = None
     try:
-        conn = apsw.Connection(DATABASE_NAME)
-        c = conn.cursor()
-        c.execute('''
-        SELECT *
-        FROM users
-        WHERE (user_name)''')
+        connection = apsw.Connection(DATABASE_NAME)
+        cursor = connection.cursor()
+        found_user = cursor.execute('''
+                    SELECT *
+                    FROM users
+                    WHERE (user_name) = (?)''', (user,))
+    except apsw.Error as err:
+        print(err)
+    return found_user
 
-    except apsw.Error as e:
-        print(e)
-        sys.exit(1)
 
 def get_all_messages_of_current_user():
     temp = a
@@ -85,9 +90,12 @@ def validate_login(username, password):
     """
     result = False
     try:
-        query = 'SELECT * FROM users WHERE user_name = (?)'
+
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
+        query = ''' SELECT *
+                    FROM users
+                    WHERE user_name = (?)'''
         cursor.execute(query, (username,))
         fetch_result = cursor.fetchone()
         if not fetch_result:
