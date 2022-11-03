@@ -7,8 +7,10 @@ Notes about security.
 1.Prepared statements have been implemented for all queries that are sent to the database.
 2. Passwords are salted and hashed before being stored in the database, ensuring that even if a leak were to happen,
     the user's credentials cannot be used at another website.
+
 3. The user password can still get leaked during transit from the client, since the current implementation only uses HTTP, with no TLS
-    So obviously during an actual deployment, the server would have a HTTPS implemented to ensure this cannot happen.
+    So obviously during an actual deployment, the server would have TLS certificate implemented to ensure this cannot happen.
+    Notes on this here: https://developer.mozilla.org/en-US/docs/Web/Security/Insecure_passwords
 
 
 
@@ -17,8 +19,8 @@ Notes about security.
 6. Added a new table for users - Done
 
 
-For storing passwords in the database, i used the "bcrypt" library, which simplies the hashing and salting off passwords.
-However, for the record, if i were to do it manually, it works like this:
+For storing passwords in the database, I used the "bcrypt" library, which simplifies the hashing and salting off passwords.
+However, for the record, if I were to do it manually, it works like this:
 1. Take in the plaintext password.
 2. Generate a salt string.
 3. Append the salt to the password

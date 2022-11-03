@@ -1,8 +1,8 @@
+from flask_login import login_required
 import forms
 import apsw
 import flask
-
-from flask import abort, make_response, request
+from flask import abort, make_response, render_template, request, send_from_directory
 from json import dumps
 from pygments.formatters import HtmlFormatter
 from markupsafe import escape
@@ -15,63 +15,6 @@ File for handling the URL routes.
 """
 
 routes = flask.Blueprint('routes', __name__)
-cssData = HtmlFormatter(nowrap=True).get_style_defs('.highlight')
-
-
-
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():
-#     form = forms.LoginForm()
-#     redirect_on_failure = flask.render_template('./auth/login.html', form=form)
-#     if form.is_submitted():
-#         print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
-#         print(request.form)
-#
-#     if not form.validate_on_submit():
-#         return redirect_on_failure
-#
-#     username = form.username.data
-#     password = form.password.data
-#
-#     valid_login = validate_login(username, password)
-#
-#     if not valid_login:
-#         return redirect_on_failure
-#
-#     user = user_loader(username)
-#
-#     # automatically sets logged in session cookie
-#     logged_user = login_user(user)
-#
-#     flask.flash('Logged in successfully.')
-#
-#     next = flask.request.args.get('next')
-#
-#     # is_safe_url should check if the url is safe for redirects.
-#     # See http://flask.pocoo.org/snippets/62/ for an example.
-#     if False and not is_safe_url(next):
-#         return flask.abort(400)
-#
-#     return flask.redirect(next or flask.url_for('index'))
-
-
-@routes.get('/search')
-def search():
-    # FIXME SQL injection possible here
-    query = request.args.get('q') or request.form.get('q') or '*'
-    stmt = f"SELECT * FROM messages WHERE message GLOB '{query}'"
-    result = f"Query: {pygmentize(stmt)}\n"
-    try:
-        connection = apsw.Connection(DATABASE_NAME)
-        c = connection.execute(stmt)
-        rows = c.fetchall()
-        result = result + 'Result:\n'
-        for row in rows:
-            result = f'{result}   {dumps(row)}\n'
-        c.close()
-        return result
-    except apsw.Error as e:
-        return f'{result}ERROR: {e}', 500
 
 
 @routes.route('/send', methods=['POST', 'GET'])
@@ -97,6 +40,25 @@ def send():
         return f'{result}ERROR: {e}'
 
 
+@routes.get('/search')
+def search():
+    # FIXME SQL injection possible here
+    query = request.args.get('q') or request.form.get('q') or '*'
+    stmt = f"SELECT * FROM messages WHERE message GLOB '{query}'"
+    result = f"Query: {pygmentize(stmt)}\n"
+    try:
+        connection = apsw.Connection(DATABASE_NAME)
+        c = connection.execute(stmt)
+        rows = c.fetchall()
+        result = result + 'Result:\n'
+        for row in rows:
+            result = f'{result}   {dumps(row)}\n'
+        c.close()
+        return result
+    except apsw.Error as e:
+        return f'{result}ERROR: {e}', 500
+
+
 @routes.get('/announcements')
 def announcements():
     query = f"SELECT author,text FROM announcements;"
@@ -111,6 +73,17 @@ def announcements():
     except apsw.Error as e:
         return {'error': f'{e}'}
 
+@routes.route('/')
+@routes.route('/index.html')
+@login_required
+def home():
+    return send_from_directory(routes.root_path, 'index.html', mimetype='text/html')
+
+
+@routes.get('/account')
+@login_required
+def account():
+    return render_template('account.html')
 
 @routes.get('/coffee/')
 def nocoffee():
@@ -121,9 +94,10 @@ def nocoffee():
 def gotcoffee():
     return "Thanks!"
 
+
 @routes.get('/highlight.css')
 def highlightStyle():
-    resp = make_response(cssData)
+    css_data = HtmlFormatter(nowrap=True).get_style_defs('.highlight')
+    resp = make_response(css_data)
     resp.content_type = 'text/css'
     return resp
-
