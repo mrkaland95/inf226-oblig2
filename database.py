@@ -39,6 +39,7 @@ def init_db():
             text            TEXT NOT NULL);''')
 
     except apsw.Error as e:
+        print(f'The server was unable to initialize the database.')
         print(e)
         sys.exit(1)
 
@@ -51,6 +52,7 @@ def add_user_to_db(user_to_add, password_to_add):
     :param password_to_add:
     :return:
     """
+    successful = False
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
@@ -59,7 +61,6 @@ def add_user_to_db(user_to_add, password_to_add):
         successful = True
     except apsw.Error as e:
         print(e)
-        sys.exit(1)
     return successful
 
 
@@ -109,7 +110,6 @@ def validate_login(username, password):
         print(err)
 
     return result
-
 
 
 def get_users_messages():

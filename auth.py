@@ -1,20 +1,13 @@
 import flask
 import flask_login
 import database
-from app import app
+import app
+import forms
 from flask import abort, render_template, Blueprint, request
 from http import HTTPStatus
-from flask_login import LoginManager, login_user
-from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField
+from flask_login import login_user
 from werkzeug.datastructures import WWWAuthenticate
 from base64 import b64decode
-from pygments import highlight
-from pygments.lexers import SqlLexer
-from pygments.filters import NameHighlightFilter, KeywordCaseFilter
-from pygments import token
-from threading import local
-
 
 
 """
@@ -38,12 +31,27 @@ class User(flask_login.UserMixin):
 
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
-    print()
+    form = forms.RegistrationForm()
+    redirect_to_register = render_template('./auth/register.html', form=form)
+    if form.is_submitted():
+        print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
+        print(request.form)
 
+    if not form.validate_on_submit():
+        return redirect_to_register
+
+    username = form.username.data
+    password = form.password.data
+    secondary_password = form.password_confirm.data
+
+    temp = 0
+    if temp:
+        return flask.url_for()
+    return redirect_to_register
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-    form = LoginForm()
+    form = forms.LoginForm()
     redirect_to_login = render_template('./auth/login.html', form=form)
     if form.is_submitted():
         print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
@@ -177,14 +185,7 @@ def user_loader(user_name):
         return found_user
 
     user = User()
-    user.id = found_user.fetchone()[0]
+    user.id = found_user
     return user
-
-class LoginForm(FlaskForm):
-    username = StringField('Username')
-    password = PasswordField('Password')
-    submit = SubmitField('Submit')
-
-
 
 

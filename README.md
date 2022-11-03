@@ -3,9 +3,18 @@ Split the "App.py" script into multiple different files that handles specific as
 Database etc.
 
 Part 2A:
+Notes about security.
+1.Prepared statements have been implemented for all queries that are sent to the database.
+2. Passwords are salted and hashed before being stored in the database, ensuring that even if a leak were to happen,
+    the user's credentials cannot be used at another website.
+3. The user password can still get leaked during transit from the client, since the current implementation only uses HTTP, with no TLS
+    So obviously during an actual deployment, the server would have a HTTPS implemented to ensure this cannot happen.
 
-1. Use the python "secrets" library to generate a cryptographically secure secret key for the app.
-2. Added a new table for users - Done
+
+
+# TODO
+5. Use the python "secrets" library to generate a cryptographically secure secret key for the app.
+6. Added a new table for users - Done
 
 
 For storing passwords in the database, i used the "bcrypt" library, which simplies the hashing and salting off passwords.
@@ -36,13 +45,7 @@ pip install wtforms
 # Another issue with the structure, is that 
 
 
-
-
-
-
-
-
-
 Sources used:
 https://flask.palletsprojects.com/en/2.2.x/tutorial/templates/#register-a-user
 https://flask.palletsprojects.com/en/2.2.x/blueprints/
+https://flask.palletsprojects.com/en/2.1.x/api/#sessions

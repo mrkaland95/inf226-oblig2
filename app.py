@@ -1,10 +1,9 @@
 import pathlib
 from database import init_db
 from utils import get_secret_key
-from auth import auth
-from routes import routes
 from flask import Flask
 from flask_login import LoginManager
+
 
 """
 File that works as the entry point for the app.
@@ -12,6 +11,10 @@ File that works as the entry point for the app.
 
 # This is defined here, as per the documentation you can instantiate it once
 # and then bind it to the various blueprints.
+secret_key_path = pathlib.Path('.secret_key')
+login_manager = LoginManager()
+login_manager.login_view = 'auth'
+login_manager.login_message_category = 'info'
 
 
 def create_app():
@@ -21,21 +24,28 @@ def create_app():
     """
     # Set up app
     app = Flask(__name__)
-    # The secret key enables storing encrypted session data in a cookie (make a secure random key for this!)
-    secret_key_path = pathlib.Path('/.secret_key')
+    # Generates a secret key if it does not exist, and puts it in the .secret_key file.
+    # Alternatively if it does exist, reads from it.
     app.secret_key = get_secret_key(secret_key_path)
+
+    login_manager.init_app(app)
     init_db()
-    app.register_blueprint(auth.auth)
-    app.register_blueprint(routes.routes)
+
+    # These had to be imported here to get past circular imports.
+    from routes import routes
+    from auth import auth
+
+    app.register_blueprint(auth)
+    app.register_blueprint(routes)
     return app
 
 
-if __name__ == '__main__':
+def main():
     app = create_app()
-    login_manager = LoginManager()
-    login_manager.init_app(app)
-    login_manager.login_view = 'auth.auth'
-    login_manager.login_message_category = 'info'
+
+if __name__ == '__main__':
+    main()
+
 
 
 

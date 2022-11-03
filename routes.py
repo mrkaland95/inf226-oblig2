@@ -1,12 +1,13 @@
 import forms
 import apsw
 import flask
-import utils
+
 from flask import abort, make_response, request
 from json import dumps
 from pygments.formatters import HtmlFormatter
 from markupsafe import escape
 from database import DATABASE_NAME
+from utils import pygmentize
 
 
 """
@@ -54,31 +55,12 @@ cssData = HtmlFormatter(nowrap=True).get_style_defs('.highlight')
 #     return flask.redirect(next or flask.url_for('index'))
 
 
-@routes.route('/send', methods=['POST', 'GET'])
-def send():
-    try:
-        connection = apsw.Connection(DATABASE_NAME)
-        cursor = connection.cursor()
-        sender = request.args.get('sender') or request.form.get('sender')
-        message = request.args.get('message') or request.args.get('message')
-        # FIXME this has an SQL Injection vulnerability.
-        if not sender or not message:
-            return f'ERROR: missing sender or message'
-        stmt = f"INSERT INTO messages (sender, message) values ('{sender}', '{message}');"
-        result = f"Query: {utils.pygmentize(stmt)}\n"
-        cursor.execute(stmt)
-        return f'{result}ok'
-    except apsw.Error as e:
-        return f'{result}ERROR: {e}'
-
-
-
 @routes.get('/search')
 def search():
     # FIXME SQL injection possible here
     query = request.args.get('q') or request.form.get('q') or '*'
     stmt = f"SELECT * FROM messages WHERE message GLOB '{query}'"
-    result = f"Query: {utils.pygmentize(stmt)}\n"
+    result = f"Query: {pygmentize(stmt)}\n"
     try:
         connection = apsw.Connection(DATABASE_NAME)
         c = connection.execute(stmt)
@@ -108,7 +90,7 @@ def send():
         if not sender or not message:
             return f'ERROR: missing sender or message'
         stmt = f"INSERT INTO messages (sender, message) values ('{sender}', '{message}');"
-        result = f"Query: {utils.pygmentize(stmt)}\n"
+        result = f"Query: {pygmentize(stmt)}\n"
         cursor.execute(stmt)
         return f'{result}ok'
     except apsw.Error as e:
