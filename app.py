@@ -4,7 +4,6 @@ from utils import get_secret_key
 from flask import Flask
 from flask_login import LoginManager
 
-
 """
 File that works as the entry point for the app.
 """
