@@ -9,6 +9,8 @@ from flask_login import login_user, logout_user
 from werkzeug.datastructures import WWWAuthenticate
 from base64 import b64decode
 
+import utils
+
 
 """
 File for handling the login side of the app.
@@ -32,7 +34,7 @@ class User(flask_login.UserMixin):
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     form = forms.RegistrationForm()
-    redirect_to_register = render_template('./register.html', form=form)
+    redirect_to_register = render_template('register.html',title='Register', form=form)
     if form.is_submitted():
         print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
         print(request.form)
@@ -43,11 +45,14 @@ def register():
     username = form.username.data
     password = form.password.data
     secondary_password = form.password_confirm.data
+    if not password == secondary_password:
+        flash(f'Specified passwords do not match. Try again.')
+        return redirect_to_register
+    hashed_password = utils.create_hashed_and_salted_password(password)
+    database.add_user_to_db(username, hashed_password)
+    flash(f'Account created. You are now able to log in.')
+    return flask.url_for('login')
 
-    temp = 0
-    if temp:
-        return flask.url_for('home')
-    return redirect_to_register
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
@@ -70,21 +75,20 @@ def login():
         return redirect_to_login
 
     user = user_loader(username)
+    if not user:
+        return redirect_to_login
 
     # automatically sets logged in session cookie
-    logged_user = login_user(user)
-
+    login_user(user)
     flask.flash('Logged in successfully.')
-
     next_request = flask.request.args.get('next')
-
     # TODO have a look at this.
     # is_safe_url should check if the url is safe for redirects.
     # See http://flask.pocoo.org/snippets/62/ for an example.
     if False and not is_safe_url(next_request):
         return flask.abort(400)
 
-    return flask.redirect(next_request or flask.url_for('home'))
+    return flask.redirect(next_request or flask.url_for('index'))
 
 @auth.route('/logout')
 def logout():
@@ -114,6 +118,7 @@ def request_loader(request):
         u = users.get(uid)
         if u:  # and check_password(u.password, passwd):
             return user_loader(uid)
+
     elif auth_scheme == 'bearer':  # Bearer auth contains an access token;
         # an 'access token' is a unique string that both identifies
         # and authenticates a user, so no username is provided (unless

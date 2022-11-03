@@ -45,6 +45,10 @@ def init_db():
         sys.exit(1)
 
 
+def get_announcements():
+    temp = 0
+
+
 def validate_login(username, password):
     """
 

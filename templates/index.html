@@ -4,17 +4,19 @@
 <head>
     <title>INF226</title>
     <link rel="stylesheet" href="highlight.css" />
-	<link rel="icon" href="../resources/favicon.png" type="image/png" />
+	<link rel="icon" href="favicon.png" type="image/png" />
 
     <style>
         * {
             box-sizing: border-box;
+            ;
         }
 
         #page {
             height: 100vh;
             display: flex;
             flex-direction: column;
+            ;
             padding: .5rem;
         }
 
@@ -42,6 +44,7 @@
             display: grid;
             grid-template-columns: 1fr 6fr 1fr 1fr;
             grid-auto-rows: 1.4rem;
+            ;
             grid-gap: .5rem;
             max-width: 70rem;
 
@@ -99,24 +102,24 @@
     </div>
 </body>
 <script>
-    let reqId = 0;
-    let anchor = document.getElementById('anchor');
-    let searchField = document.getElementById('search');
-    let senderField = document.getElementById('sender');
-    let messageField = document.getElementById('message');
-    let searchBtn = document.getElementById('searchBtn');
-    let sendBtn = document.getElementById('sendBtn');
-    let allBtn = document.getElementById('allBtn');
-    let output = document.getElementById('output');
-    let header = document.getElementById('header');
+    var reqId = 0;
+    var anchor = document.getElementById('anchor');
+    var searchField = document.getElementById('search');
+    var senderField = document.getElementById('sender');
+    var messageField = document.getElementById('message');
+    var searchBtn = document.getElementById('searchBtn');
+    var sendBtn = document.getElementById('sendBtn');
+    var allBtn = document.getElementById('allBtn');
+    var output = document.getElementById('output');
+    var header = document.getElementById('header');
 
     var checkAnnouncements = async () => {
-        result = await fetch('/announcements');
-        announcements = await result.json();
-        if (announcements && Array.isArray(announcements.data)) {
+        res = await fetch('/announcements');
+        anns = await res.json();
+        if (anns && Array.isArray(anns.data)) {
             const elts = [];
-            announcements.data.forEach((element, i) => {
-                if (i > 0) {
+            anns.data.forEach((element, idx) => {
+                if (idx > 0) {
                     const node = document.createElement('li');
                     node.textContent = '  …  ';
                     elts.push(node);

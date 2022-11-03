@@ -17,6 +17,21 @@ File for handling the URL routes.
 routes = flask.Blueprint('routes', __name__)
 
 
+@routes.route('/')
+@routes.route('/index.html')
+@routes.route('/home')
+@login_required
+def home():
+    return send_from_directory(routes.root_path, 'templates/index.html', mimetype='text/html')
+
+
+
+
+@routes.route('/coffee/', methods=['POST', 'PUT'])
+def gotcoffee():
+    return "Thanks!"
+
+
 @routes.route('/send', methods=['POST', 'GET'])
 def send():
     """
@@ -42,13 +57,12 @@ def send():
 
 @routes.get('/search')
 def search():
-    # FIXME SQL injection possible here
     query = request.args.get('q') or request.form.get('q') or '*'
-    stmt = f"SELECT * FROM messages WHERE message GLOB '{query}'"
+    stmt = '''SELECT * FROM messages WHERE message_content GLOB (?)'''
     result = f"Query: {pygmentize(stmt)}\n"
     try:
         connection = apsw.Connection(DATABASE_NAME)
-        c = connection.execute(stmt)
+        c = connection.execute(stmt, query)
         rows = c.fetchall()
         result = result + 'Result:\n'
         for row in rows:
@@ -73,26 +87,16 @@ def announcements():
     except apsw.Error as e:
         return {'error': f'{e}'}
 
-@routes.route('/')
-@routes.route('/index.html')
-@login_required
-def home():
-    return send_from_directory(routes.root_path, 'index.html', mimetype='text/html')
-
 
 @routes.get('/account')
 @login_required
 def account():
     return render_template('account.html')
 
+
 @routes.get('/coffee/')
 def nocoffee():
     abort(418)
-
-
-@routes.route('/coffee/', methods=['POST', 'PUT'])
-def gotcoffee():
-    return "Thanks!"
 
 
 @routes.get('/highlight.css')
@@ -101,3 +105,5 @@ def highlightStyle():
     resp = make_response(css_data)
     resp.content_type = 'text/css'
     return resp
+
+
