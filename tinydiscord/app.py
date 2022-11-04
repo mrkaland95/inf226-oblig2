@@ -1,6 +1,6 @@
 import pathlib
-from database import init_db
-from utils import get_secret_key
+from .database import init_db
+from .utils import get_secret_key
 from flask import Flask
 from flask_login import LoginManager
 
@@ -31,8 +31,8 @@ def create_app():
     init_db()
 
     # These are imported here to get past circular imports.
-    from routes import routes
-    from auth import auth
+    from .routes import routes
+    from .auth import auth
 
     app.register_blueprint(auth)
     app.register_blueprint(routes)

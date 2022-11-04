@@ -1,0 +1,5 @@
+Flask~=2.2.2
+Werkzeug~=2.2.2
+setuptools~=49.2.1
+Pygments~=2.11.2
+MarkupSafe~=2.1.1

@@ -25,23 +25,47 @@ Notes about security.
     Notes on this here: https://developer.mozilla.org/en-US/docs/Web/Security/Insecure_passwords
 
 
-### Running the server
+### Setting up and running the server
+
+The server includes a server.py script, so all *should* be necessary to run it, 
+is to run the following command(while being in the "oblig2" as your working directory in your shell.)
+
+`python setup.py install`
+
+NOTE: You may or may not need to have your shell
+
+If that doesen't work, the required libraries to run the server outside of the standard library are as follows:
+
+`pip install flask`
+
+`pip install flask_login`
+
+`pip install flask_wtf`
+
+`pip install wtforms`
+
+`pip install apsw`
+
+`pip install bcrypt`
+
+
+Then, once all the packages are installed, navigate to the tinydiscord folder and do "flask run". Now the server *should* be up and running.
+
+
+
+NOTE: The program was worked on and ran with Windows 10/11.
+
+I have absolutely no clue whether it works for Linux/macOS
 
 
 
 
-libraries to download
-pip install bcrypt
-pip install flask_login
-pip install flask
-pip install wtforms
 
 Currently working on: Login
 
 1. [ ] TODO 1. Add a way to register an user.
 2. [ ] TODO 2. Add a way to logout a user.
 3. [ ] TODO 3. Implement the instant mesaging system.
-4. [ ] TODO 4. if i have the time, set up a setup.py script for packages.
 
 [//]: # (# The structure could have an impact on the security)
 

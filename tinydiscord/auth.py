@@ -4,7 +4,7 @@ import database
 import app
 import forms
 import utils
-from flask import abort, flash, redirect, render_template, Blueprint, request
+from flask import flash, render_template, Blueprint, request
 from http import HTTPStatus
 from flask_login import login_user, logout_user
 from werkzeug.datastructures import WWWAuthenticate
@@ -34,7 +34,7 @@ class User(flask_login.UserMixin):
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     form = forms.RegistrationForm()
-    redirect_to_register = render_template('register.html', title='Register', form=form)
+    redirect_to_register = render_template('templates/register.html', title='Register', form=form)
     if form.is_submitted():
         print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
         # print(request.form)
@@ -46,7 +46,7 @@ def register():
     password = form.password.data
     secondary_password = form.password_confirm.data
 
-    if not password == secondary_password:
+    if password != secondary_password:
         flash(f'Specified passwords do not match. Try again.')
         return redirect_to_register
 
@@ -62,7 +62,7 @@ def register():
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     form = forms.LoginForm()
-    redirect_to_login = render_template('./login.html', form=form)
+    redirect_to_login = render_template('./templates/login.html', form=form)
     if form.is_submitted():
         print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
         print(request.form)
@@ -94,6 +94,8 @@ def login():
         return flask.abort(400)
 
     return flask.redirect(next_request or flask.url_for('routes.home'))
+
+
 
 @auth.route('/logout')
 def logout():

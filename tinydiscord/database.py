@@ -1,11 +1,6 @@
 import sys
 import apsw
-import hashlib
-import app
-import bcrypt
-
-import utils
-
+from .utils import check_password
 
 DATABASE_NAME = './tiny.db'
 
@@ -65,14 +60,14 @@ def validate_login(username: str, password: str) -> bool:
         cursor = connection.cursor()
         query = ''' SELECT password
                     FROM users
-                    WHERE user_name = (?)'''
+                    WHERE user_name = (?);'''
         cursor.execute(query, (username,))
         fetch_result = cursor.fetchone()
         if not fetch_result:
             return result
         password_in_db = fetch_result[0]
         # result = True if password_in_db == password else False
-        result = utils.check_password(password, password_in_db)
+        result = check_password(password, password_in_db)
 
     except apsw.Error as err:
         print(err)
@@ -109,7 +104,7 @@ def get_user_data_from_db(user):
         found_user = cursor.execute('''
                     SELECT *
                     FROM users
-                    WHERE (user_name) = (?)''', (user,))
+                    WHERE (user_name) = (?);''', (user,))
     except apsw.Error as err:
         print(err)
     return found_user
@@ -126,13 +121,16 @@ def get_users_messages(user_name):
         cursor = connection.cursor()
         query = ''' SELECT *
                     FROM messages
-                    WHERE sender_id = (?)
-        '''
+                    WHERE sender_id = (?);
+                '''
     except apsw.Error as err:
         print(err)
 
 
 def get_specific_message(message_id):
+    """
+    Fetches a specific message with a specific id.
+    """
     message = None
     try:
         connection = apsw.Connection(DATABASE_NAME)
@@ -150,5 +148,4 @@ def get_specific_message(message_id):
 
 
 if __name__ == '__main__':
-    a = 0
-    add_user_to_db('test', 'test')
+    init_db()

@@ -1,13 +1,12 @@
 from flask_login import login_required
-import forms
 import apsw
 import flask
 from flask import abort, make_response, render_template, request, send_from_directory
 from json import dumps
 from pygments.formatters import HtmlFormatter
 from markupsafe import escape
-from database import DATABASE_NAME
-from utils import pygmentize
+from .database import DATABASE_NAME
+from .utils import pygmentize
 
 
 """
@@ -24,8 +23,9 @@ routes = flask.Blueprint('routes', __name__)
 def home():
     return send_from_directory(routes.root_path, 'templates/index.html', mimetype='text/html')
 
-
+@routes.post('/new')
 @routes.route('/send', methods=['POST', 'GET'])
+@login_required
 def send():
     """
     Route responsible for sending a message.
@@ -37,7 +37,6 @@ def send():
         cursor = connection.cursor()
         sender = request.args.get('sender') or request.form.get('sender')
         message = request.args.get('message') or request.args.get('message')
-        # FIXME this has an SQL injection vuln.
         if not sender or not message:
             return f'ERROR: missing sender or message'
         stmt = f"INSERT INTO messages (sender, message) values ('{sender}', '{message}');"
@@ -50,6 +49,7 @@ def send():
 
 @routes.get('/search')
 @routes.get('/messages')
+@login_required
 def search():
     query = request.args.get('q') or request.form.get('q') or '*'
     stmt = '''SELECT * FROM messages WHERE message_content GLOB (?)'''
@@ -68,6 +68,7 @@ def search():
 
 
 @routes.get('/announcements')
+@login_required
 def announcements():
     query = f"SELECT author,text FROM announcements;"
     try:
@@ -82,10 +83,13 @@ def announcements():
         return {'error': f'{e}'}
 
 
+@routes.get('/message')
+
+
 @routes.get('/account')
 @login_required
 def account():
-    return render_template('account.html')
+    return render_template('/templates/account.html')
 
 
 @routes.get('/coffee/')
