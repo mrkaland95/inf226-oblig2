@@ -4,6 +4,9 @@ import hashlib
 import app
 import bcrypt
 
+import utils
+
+
 DATABASE_NAME = './tiny.db'
 
 """
@@ -22,13 +25,13 @@ def init_db():
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
         cursor.execute('''  CREATE TABLE IF NOT EXISTS users (
-            user_id         integer PRIMARY KEY AUTOINCREMENT ,
+            user_id         INTEGER PRIMARY KEY AUTOINCREMENT ,
             user_name       TEXT UNIQUE NOT NULL,
             password        TEXT NOT NULL,
-            blocked_users);''')
+            blocked_users   );''')
 
         cursor.execute('''  CREATE TABLE IF NOT EXISTS messages (
-            message_id      integer PRIMARY KEY AUTOINCREMENT,
+            message_id      INTEGER PRIMARY KEY AUTOINCREMENT,
             sender_id       INTEGER NOT NULL,
             created_time    NOT NULL DEFAULT CURRENT_TIMESTAMP,
             message_content TEXT NOT NULL,
@@ -37,7 +40,7 @@ def init_db():
         cursor.execute('''  CREATE TABLE IF NOT EXISTS announcements (
             announcement_id integer PRIMARY KEY AUTOINCREMENT, 
             author          TEXT NOT NULL,
-            text            TEXT NOT NULL);''')
+            content         TEXT NOT NULL);''')
 
     except apsw.Error as e:
         print(f'The server was unable to initialize the database.')
@@ -49,7 +52,7 @@ def get_announcements():
     temp = 0
 
 
-def validate_login(username, password):
+def validate_login(username: str, password: str) -> bool:
     """
 
     :param username: The user that is to be checked for in the database.
@@ -58,28 +61,26 @@ def validate_login(username, password):
     """
     result = False
     try:
-
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
-        query = ''' SELECT *
+        query = ''' SELECT password
                     FROM users
                     WHERE user_name = (?)'''
         cursor.execute(query, (username,))
         fetch_result = cursor.fetchone()
         if not fetch_result:
             return result
-        password_in_db = fetch_result[2]
-        result = True if password_in_db == password else False
-        # result = check_password(password, password_in_db)
-        # print(f'{password_in_db = }')
-        # print(f'{result = }')
+        password_in_db = fetch_result[0]
+        # result = True if password_in_db == password else False
+        result = utils.check_password(password, password_in_db)
+
     except apsw.Error as err:
         print(err)
 
     return result
 
 
-def add_user_to_db(user_to_add, password_to_add):
+def add_user_to_db(user_to_add: str, password_to_add: bytes):
     """
     Adds a specified user to the database
 
@@ -91,8 +92,9 @@ def add_user_to_db(user_to_add, password_to_add):
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
-        cursor.execute('''INSERT INTO users (user_name, password)
-                          VALUES (?, ?);''', (user_to_add, password_to_add))
+        query = '''INSERT INTO users (user_name, password)
+                   VALUES (?, ?);'''
+        cursor.execute(query, (user_to_add, password_to_add))
         successful = True
     except apsw.Error as e:
         print(e)
@@ -113,7 +115,12 @@ def get_user_data_from_db(user):
     return found_user
 
 
-def get_users_messages(user_id):
+def get_users_messages(user_name):
+    """
+    Gets all of a user's messages.
+    :param user_name:
+    :return:
+    """
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
@@ -123,8 +130,24 @@ def get_users_messages(user_id):
         '''
     except apsw.Error as err:
         print(err)
-        # app.logger.critical(f'There was a critical error when trying to access the database')
-        # sys.exit(1)
+
+
+def get_specific_message(message_id):
+    message = None
+    try:
+        connection = apsw.Connection(DATABASE_NAME)
+        cursor = connection.cursor()
+        query = ''' SELECT *
+                    FROM messages
+                    WHERE message_id = (?)
+                '''
+        result = cursor.execute(query, (message_id, ))
+        if result:
+            message = result.fetchone()
+    except apsw.Error as err:
+        print(err)
+    return message
+
 
 if __name__ == '__main__':
     a = 0

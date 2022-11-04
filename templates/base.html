@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>INF226 - Wannabe Discord Login</title>
-    <link rel="stylesheet" href="highlight.css" />
-	<link rel="icon" href="favicon.png" type="image/png" />
-
+    <meta charset="UTF-8">
+    {% if title %}
+        <title>INF226 Wannabe Discord - {{ title }}</title>
+    {% else %}
+        <title>INF226 Wannabe Discord</title>
+    {% endif %}
     <style>
         * {
             box-sizing: border-box;
@@ -73,36 +74,9 @@
             padding: .25rem;
             margin:0 1rem;
         }
-        .center_element {
-            margin: auto;
-            max-width: 500px;
-        }
     </style>
-
 </head>
-
-<body class="center">
-    <div class="center_element">
-    <h1 class>INF226 - Wannabe Discord Login</h1>
-    <div id="page">
-    <form action="" method=post>
-  <dl>
-      {{ form.csrf_token }}
-      
-    <dt> Username:
-    <dd> {{ form.username }}
-    <dt> Password:
-    <dd> {{ form.password }}
-  </dl>
-    <p>
-    <input type=submit value=Login>
-    <input type=hidden value="{{ next or '' }}" name=next>
-    </p>
-    <p>
-        No account? Sign up here.
-    </p>
-
-    </form>
-    </div>
-    </div>
+<body>
+    {% block content %} {%}
 </body>
+</html>

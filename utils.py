@@ -41,25 +41,31 @@ def get_secret_key(file_path: pathlib.Path):
     return secret_key
 
 
-def create_hashed_and_salted_password(plaintext_password):
+def create_hashed_and_salted_password(plaintext_password: str | bytes) -> bytes:
     """
     Function for salting and hashing a plaintext password.
 
     :param plaintext_password:
     :return:
     """
-    # Bcrypt generates and inserts the salt into the password itself.
-    return bcrypt.hashpw(plaintext_password, bcrypt.gensalt())
+    # Bcrypt generates and inserts the salt into the password itself
+    if isinstance(plaintext_password, str):
+        plaintext_password = bytes(plaintext_password, encoding='utf-8')
+    return bcrypt.hashpw(plaintext_password, bytes(bcrypt.gensalt()))
 
 
 def check_password(plaintext_password: str | bytes, hashed_password: str | bytes) -> bool:
     """
+    Performs the password validation.
+
     :param plaintext_password: The plaintext password string.
     :param hashed_password:
     :return: A bool of whether the password matched.
     """
     if isinstance(plaintext_password, str):
-        plaintext_password = bytes(plaintext_password)
+        plaintext_password = bytes(plaintext_password, encoding='utf-8')
+
     if isinstance(hashed_password, str):
-        plaintext_password = bytes(plaintext_password)
+        hashed_password = bytes(hashed_password, encoding='utf-8')
+
     return bcrypt.checkpw(plaintext_password, hashed_password)

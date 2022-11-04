@@ -3,13 +3,13 @@ import flask_login
 import database
 import app
 import forms
+import utils
 from flask import abort, flash, redirect, render_template, Blueprint, request
 from http import HTTPStatus
 from flask_login import login_user, logout_user
 from werkzeug.datastructures import WWWAuthenticate
 from base64 import b64decode
 
-import utils
 
 
 """
@@ -34,10 +34,10 @@ class User(flask_login.UserMixin):
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     form = forms.RegistrationForm()
-    redirect_to_register = render_template('register.html',title='Register', form=form)
+    redirect_to_register = render_template('register.html', title='Register', form=form)
     if form.is_submitted():
         print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
-        print(request.form)
+        # print(request.form)
 
     if not form.validate_on_submit():
         return redirect_to_register
@@ -45,13 +45,18 @@ def register():
     username = form.username.data
     password = form.password.data
     secondary_password = form.password_confirm.data
+
     if not password == secondary_password:
         flash(f'Specified passwords do not match. Try again.')
         return redirect_to_register
+
     hashed_password = utils.create_hashed_and_salted_password(password)
-    database.add_user_to_db(username, hashed_password)
+    if not database.add_user_to_db(username, hashed_password):
+        flash('The account already exists, choose another username.')
+        return redirect_to_register
+
     flash(f'Account created. You are now able to log in.')
-    return flask.url_for('login')
+    return flask.redirect(flask.url_for('auth.login'))
 
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -88,12 +93,12 @@ def login():
     if False and not is_safe_url(next_request):
         return flask.abort(400)
 
-    return flask.redirect(next_request or flask.url_for('index'))
+    return flask.redirect(next_request or flask.url_for('routes.home'))
 
 @auth.route('/logout')
 def logout():
     logout_user()
-    return flask.redirect(flask.url_for('home'))
+    return flask.redirect(flask.url_for('routes.home'))
 
 
 # This method is called to get a User object based on a request,
