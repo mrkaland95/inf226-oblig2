@@ -1,35 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>INF226 - Wannabe Discord Registration</title>
-    <meta charset="UTF-8">
-    <style>
-        .center_element {
-            margin: auto;
-            max-width: 500px;
-        }
-    </style>
-    <body>
-    <h2 class="center_element">INF226 - Wannabe Discord Registration</h2>
-    <div id="page" class=center_element>
-    <form action="" method=post>
-  <dl>
-      {{ form.csrf_token }}
+{% extends "base.html" %}
+{% block content %}
 
-    <dt>Username:
+<h1 class=center_element>INF226 - Wannabe Discord Registration</h1>
+  <dl class=center_element>
+      {{ form.csrf_token }}
+    <dt> Username:
     <dd>{{ form.username }}
 
-    <dt>Password:
+    <dt> Password:
     <dd>{{ form.password }}
 
-    <dt>Confirm Password:
+    <dt> Confirm Password:
     <dd>{{ form.password_confirm }}
 
-  </dl>
-  <p>
+      <p>
     <input type=submit value=Register>
     <input type=hidden value="{{ next or '' }}" name=next>
-    </form>
-    </div>
-</body>
-</html>
+      <p>
+  </dl>
+    <p class=center_element><small>
+        Already have an account? <a href={{url_for("auth.login")}}>Sign In</a>
+    </small></p>
+{% endblock content %}

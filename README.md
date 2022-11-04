@@ -1,4 +1,6 @@
-Part 2A:
+### Part 2A:
+
+From the onset, it was obvious 
 
 
 
@@ -66,6 +68,8 @@ https://flask-login.readthedocs.io/en/latest/
 
 
 ##### Cookies and Sessions
+
+https://brightsec.com/blog/csrf-token/
 
 https://flask.palletsprojects.com/en/2.1.x/api/#sessions
 
