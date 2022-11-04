@@ -1,5 +1,4 @@
 import pathlib
-from database import init_db
 from utils import get_secret_key
 from flask import Flask
 from flask_login import LoginManager
@@ -12,6 +11,7 @@ File that works as the entry point for the app.
 # and then bind it to the various blueprints.
 secret_key_path = pathlib.Path('.secret_key')
 login_manager = LoginManager()
+# Redirects the user to this route if the user doesen't have permission to view a page.
 login_manager.login_view = 'auth.login'
 # login_manager.login_message_category = 'info'
 
@@ -21,6 +21,8 @@ def create_app():
     Initializes the actual app.
     :return:
     """
+
+    from database import init_db
     # Set up app
     app = Flask(__name__)
     # Generates a secret key if it does not exist, and puts it in the .secret_key file.
@@ -34,6 +36,7 @@ def create_app():
     from routes import routes
     from auth import auth
 
+    # Adds the blueprints so the app can use them.
     app.register_blueprint(auth)
     app.register_blueprint(routes)
 

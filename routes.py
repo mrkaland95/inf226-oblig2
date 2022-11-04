@@ -1,4 +1,6 @@
 from flask_login import login_required
+
+import database
 import forms
 import apsw
 import flask
@@ -24,6 +26,12 @@ routes = flask.Blueprint('routes', __name__)
 def home():
     return send_from_directory(routes.root_path, 'templates/index.html', mimetype='text/html')
 
+#
+# @routes.post('/new')
+# def send_message():
+#     sender = request.args.get('sender')
+#
+
 
 @routes.route('/send', methods=['POST', 'GET'])
 def send():
@@ -33,19 +41,18 @@ def send():
     :return:
     """
     try:
-        connection = apsw.Connection(DATABASE_NAME)
-        cursor = connection.cursor()
         sender = request.args.get('sender') or request.form.get('sender')
         message = request.args.get('message') or request.args.get('message')
-        # FIXME this has an SQL injection vuln.
         if not sender or not message:
             return f'ERROR: missing sender or message'
-        stmt = f"INSERT INTO messages (sender, message) values ('{sender}', '{message}');"
-        result = f"Query: {pygmentize(stmt)}\n"
-        cursor.execute(stmt)
-        return f'{result}ok'
+        database.send_message(sender, message)
+
+        # stmt = f"INSERT INTO messages (sender, message) values ('{sender}', '{message}');"
+        # result = f"Query: {pygmentize(stmt)}\n"
+        # cursor.execute(stmt)
+        return f'{message} - ok'
     except apsw.Error as e:
-        return f'{result}ERROR: {e}'
+        return f'ERROR: {e}'
 
 
 @routes.get('/search')

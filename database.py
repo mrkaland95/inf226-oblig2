@@ -27,7 +27,7 @@ def init_db():
         cursor.execute('''  CREATE TABLE IF NOT EXISTS users (
             user_id         INTEGER PRIMARY KEY AUTOINCREMENT ,
             user_name       TEXT UNIQUE NOT NULL,
-            password        TEXT NOT NULL,
+            password        BLOB NOT NULL,
             blocked_users   );''')
 
         cursor.execute('''  CREATE TABLE IF NOT EXISTS messages (
@@ -63,9 +63,10 @@ def validate_login(username: str, password: str) -> bool:
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
-        query = ''' SELECT password
-                    FROM users
-                    WHERE user_name = (?)'''
+        query = \
+            ''' SELECT password
+                FROM users
+                WHERE user_name = (?)'''
         cursor.execute(query, (username,))
         fetch_result = cursor.fetchone()
         if not fetch_result:
@@ -92,8 +93,10 @@ def add_user_to_db(user_to_add: str, password_to_add: bytes):
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
-        query = '''INSERT INTO users (user_name, password)
-                   VALUES (?, ?);'''
+        query = \
+            '''INSERT INTO users (user_name, password)
+               VALUES (?, ?);'''
+
         cursor.execute(query, (user_to_add, password_to_add))
         successful = True
     except apsw.Error as e:
@@ -118,6 +121,7 @@ def get_user_data_from_db(user):
 def get_users_messages(user_name):
     """
     Gets all of a user's messages.
+
     :param user_name:
     :return:
     """
@@ -126,8 +130,10 @@ def get_users_messages(user_name):
         cursor = connection.cursor()
         query = ''' SELECT *
                     FROM messages
-                    WHERE sender_id = (?)
-        '''
+                    WHERE sender_id = (?)'''
+
+        result = cursor.execute(query, (user_name,))
+        result = result.fetchall()
     except apsw.Error as err:
         print(err)
 
@@ -141,7 +147,7 @@ def get_specific_message(message_id):
                     FROM messages
                     WHERE message_id = (?)
                 '''
-        result = cursor.execute(query, (message_id, ))
+        result = cursor.execute(query, (message_id,))
         if result:
             message = result.fetchone()
     except apsw.Error as err:
@@ -149,6 +155,21 @@ def get_specific_message(message_id):
     return message
 
 
+def send_message(sender, message):
+    successful = False
+    try:
+        connection = apsw.Connection(DATABASE_NAME)
+        cursor = connection.cursor()
+        query = '''INSERT INTO messages (sender_id, message_content) 
+                   VALUES (?, ?);'''
+        cursor.execute(query, (sender, message))
+        successful = True
+    except apsw.Error as err:
+        print(err)
+
+    return successful
+
+
+
 if __name__ == '__main__':
-    a = 0
-    add_user_to_db('test', 'test')
+    init_db()

@@ -38,9 +38,6 @@ pip install flask_login
 pip install flask
 pip install wtforms
 
-Currently working on: Login
-
-1. [ ] TODO 1. Add a way to register an user.
 2. [ ] TODO 2. Add a way to logout a user.
 3. [ ] TODO 3. Implement the instant mesaging system.
 4. [ ] TODO 4. if i have the time, set up a setup.py script for packages.
@@ -78,3 +75,11 @@ https://www.digitalocean.com/community/tutorials/how-to-add-authentication-to-yo
 ##### Same Origin Policy:
 
 https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy
+
+##### CSS
+
+https://www.w3schools.com/css/css_navbar_horizontal.asp
+
+##### Flask specific security
+
+https://flask.palletsprojects.com/en/2.2.x/security/

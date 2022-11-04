@@ -1,28 +1,27 @@
+import time
+
 import flask
 import flask_login
 import database
 import app
 import forms
 import utils
-from flask import abort, flash, redirect, render_template, Blueprint, request
+from flask import abort, flash, redirect, render_template, Blueprint, request, current_app
 from http import HTTPStatus
 from flask_login import login_user, logout_user
 from werkzeug.datastructures import WWWAuthenticate
 from base64 import b64decode
 
-
-
 """
 File for handling the login side of the app.
 """
 
+auth = Blueprint('auth', __name__)
+
+
 # FIXME remove this once implemented the database.
 users = {'alice': {'password': 'password123', 'token': 'tiktok'},
          'bob': {'password': 'bananas'}}
-
-
-auth = Blueprint('auth', __name__)
-
 
 # Class to store user info
 # UserMixin provides us with an `id` field and the necessary
@@ -34,7 +33,7 @@ class User(flask_login.UserMixin):
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     form = forms.RegistrationForm()
-    redirect_to_register = render_template('register.html', title='Register', form=form)
+    redirect_to_register = render_template('register.html', title='Wannabe Discord Register', form=form)
     if form.is_submitted():
         print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
         # print(request.form)
@@ -44,28 +43,28 @@ def register():
 
     username = form.username.data
     password = form.password.data
-    secondary_password = form.password_confirm.data
 
-    if not password == secondary_password:
-        flash(f'Specified passwords do not match. Try again.')
-        return redirect_to_register
+    # if not password == secondary_password:
+    #     flash(f'Specified passwords do not match. Try again.')
+    #     return redirect_to_register
 
     hashed_password = utils.create_hashed_and_salted_password(password)
     if not database.add_user_to_db(username, hashed_password):
         flash('The account already exists, choose another username.')
+        time.sleep(0.05)
         return redirect_to_register
 
-    flash(f'Account created. You are now able to log in.')
+    flash(f'Account created. You should now be able to log in.')
     return flask.redirect(flask.url_for('auth.login'))
 
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     form = forms.LoginForm()
-    redirect_to_login = render_template('./login.html', form=form)
-    if form.is_submitted():
-        print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
-        print(request.form)
+    redirect_to_login = render_template('login.html', title='Wannabe Discord Login', form=form)
+    # if form.is_submitted():
+    #     print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
+    #     print(request.form)
 
     if not form.validate_on_submit():
         return redirect_to_login
@@ -81,12 +80,14 @@ def login():
 
     user = user_loader(username)
     if not user:
+        flash('Something went wrong when loading the user on the server.')
         return redirect_to_login
 
     # automatically sets logged in session cookie
     login_user(user)
     flask.flash('Logged in successfully.')
     next_request = flask.request.args.get('next')
+
     # TODO have a look at this.
     # is_safe_url should check if the url is safe for redirects.
     # See http://flask.pocoo.org/snippets/62/ for an example.
@@ -95,10 +96,12 @@ def login():
 
     return flask.redirect(next_request or flask.url_for('routes.home'))
 
+
 @auth.route('/logout')
 def logout():
     logout_user()
-    return flask.redirect(flask.url_for('routes.home'))
+    flash('Logged out successfully.')
+    return flask.redirect(flask.url_for('auth.login'))
 
 
 # This method is called to get a User object based on a request,
@@ -106,6 +109,8 @@ def logout():
 # than getting the user name the standard way (from the session cookie)
 @app.login_manager.request_loader
 def request_loader(request):
+
+    print(request.headers)
     # Even though this HTTP header is primarily used for *authentication*
     # rather than *authorization*, it's still called "Authorization".
     auth = request.headers.get('Authorization')
