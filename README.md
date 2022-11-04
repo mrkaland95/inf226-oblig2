@@ -43,14 +43,34 @@ Currently working on: Login
 3. [ ] TODO 3. Implement the instant mesaging system.
 4. [ ] TODO 4. if i have the time, set up a setup.py script for packages.
 
-# The structure could have an impact on the security
-# beacuse it's hard to keep an overview of everything when it's structured in a single file.
-# Another issue with the structure, is that 
+[//]: # (# The structure could have an impact on the security)
+
+[//]: # (# beacuse it's hard to keep an overview of everything when it's structured in a single file.)
+
+[//]: # (# Another issue with the structure, is that )
 
 
-Sources used:
+Various sources and resources used:
+
+##### Blueprints
+
 https://flask.palletsprojects.com/en/2.2.x/tutorial/templates/#register-a-user
 
 https://flask.palletsprojects.com/en/2.2.x/blueprints/
 
+Corey Schaffer Flask Project - Blueprints - https://youtu.be/Wfx4YBzg16s 
+
+##### Logins
+
+https://flask-login.readthedocs.io/en/latest/
+
+
+##### Cookies and Sessions
+
 https://flask.palletsprojects.com/en/2.1.x/api/#sessions
+
+https://www.digitalocean.com/community/tutorials/how-to-add-authentication-to-your-app-with-flask-login
+
+##### Same Origin Policy:
+
+https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy
