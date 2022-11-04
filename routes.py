@@ -25,13 +25,6 @@ def home():
     return send_from_directory(routes.root_path, 'templates/index.html', mimetype='text/html')
 
 
-
-
-@routes.route('/coffee/', methods=['POST', 'PUT'])
-def gotcoffee():
-    return "Thanks!"
-
-
 @routes.route('/send', methods=['POST', 'GET'])
 def send():
     """
@@ -56,6 +49,7 @@ def send():
 
 
 @routes.get('/search')
+@routes.get('/messages')
 def search():
     query = request.args.get('q') or request.form.get('q') or '*'
     stmt = '''SELECT * FROM messages WHERE message_content GLOB (?)'''
@@ -97,6 +91,10 @@ def account():
 @routes.get('/coffee/')
 def nocoffee():
     abort(418)
+
+@routes.route('/coffee/', methods=['POST', 'PUT'])
+def gotcoffee():
+    return "Thanks!"
 
 
 @routes.get('/highlight.css')
