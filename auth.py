@@ -1,12 +1,11 @@
 import time
-
 import flask
 import flask_login
 import database
 import app
 import forms
 import utils
-from flask import abort, flash, redirect, render_template, Blueprint, request, current_app
+from flask import flash,  render_template, Blueprint, request, current_app
 from http import HTTPStatus
 from flask_login import login_user, logout_user
 from werkzeug.datastructures import WWWAuthenticate
@@ -23,9 +22,8 @@ auth = Blueprint('auth', __name__)
 def register():
     form = forms.RegistrationForm()
     redirect_to_register = render_template('register.html', title='Wannabe Discord Register', form=form)
-    if form.is_submitted():
-        print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
-        # print(request.form)
+    # if form.is_submitted():
+    #     print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
 
     if not form.validate_on_submit():
         return redirect_to_register
@@ -33,16 +31,13 @@ def register():
     username = form.username.data
     password = form.password.data
 
-    # if not password == secondary_password:
-    #     flash(f'Specified passwords do not match. Try again.')
-    #     return redirect_to_register
-
     hashed_password = utils.create_hashed_and_salted_password(password)
+
     if not database.add_user_to_db(username, hashed_password):
         flash('The account already exists, choose another username.')
         time.sleep(0.05)
         return redirect_to_register
-
+    current_app.logger.info(f'Created account with username: {username} and password: {hashed_password}')
     flash(f'Account created. You should now be able to log in.')
     return flask.redirect(flask.url_for('auth.login'))
 
@@ -60,7 +55,6 @@ def login():
     password = form.password.data
 
     valid_login = database.validate_login(username, password)
-    f'{valid_login = }'
 
     if not valid_login:
         flash('Login was unsuccessful. Please check username and password.')
@@ -75,6 +69,7 @@ def login():
     # automatically sets logged in session cookie
     login_user(user)
     flask.flash('Logged in successfully.')
+    time.sleep(0.05)
     next_request = flask.request.args.get('next')
 
     # is_safe_url should check if the url is safe for redirects.
@@ -111,10 +106,7 @@ def request_loader(request):
     auth_scheme = auth_scheme.casefold()
     if auth_scheme == 'basic':  # Basic auth has username:password in base64
         (uid, passwd) = b64decode(auth_params.encode(errors='ignore')).decode(errors='ignore').split(':', maxsplit=1)
-        print(f'{uid = }')
-        print(f'Basic auth: {uid}:{passwd}')
-
-        if database.validate_login(uid, passwd):  # and check_password(u.password, passwd):
+        if database.validate_login(uid, passwd):
             return user_loader(uid)
 
     # For other authentication schemes, see
@@ -133,21 +125,18 @@ def request_loader(request):
 
 @app.login_manager.user_loader
 def user_loader(uid):
-    found_user = database.get_user_data(uid)
+    found_user = database.get_user_data_by_name(uid)
 
     if not found_user:
         return
 
     user = User()
-    user.id = found_user[0]
-    user.username = found_user[1]
+    user.id = found_user[1]
     return user
 
 
 class User(flask_login.UserMixin):
-    username: str
     time_created: str
-
     pass
 
 

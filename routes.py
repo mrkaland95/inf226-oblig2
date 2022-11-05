@@ -19,14 +19,15 @@ File for handling the URL routes.
 routes = flask.Blueprint('routes', __name__)
 
 
+@login_required
 @routes.route('/')
 @routes.route('/index.html')
 @routes.route('/home')
-@login_required
 def home():
     return send_from_directory(routes.root_path, 'templates/index.html', mimetype='text/html')
 
 
+@login_required
 @routes.route('/send', methods=['POST', 'GET'])
 def send():
     """
@@ -35,11 +36,12 @@ def send():
     :return:
     """
     try:
+        current_user = flask_login.current_user.id
         sender = request.args.get('sender') or request.form.get('sender')
         message = request.args.get('message') or request.args.get('message')
         if not sender or not message:
             return f'ERROR: missing sender or message'
-        database.send_message(sender, message)
+        database.send_message(current_user, message)
         return f'{message} - ok'
     except apsw.Error as e:
         return f'ERROR: {e}'
@@ -48,17 +50,23 @@ def send():
 @login_required
 @routes.get('/search')
 @routes.get('/messages')
+@routes.get('/messages/int:<ID>')
 def search():
-    current_user = flask_login.current_user
-    print(current_user.id)
-    search_paramter = request.args.get('q') or request.form.get('q') or '*'
-    stmt = '''SELECT * FROM messages
-              INNER JOIN users u on u.user_id = messages.sender_id
-              WHERE (message_content GLOB (?) AND user_name = (?))'''
+    current_user = flask_login.current_user.id
+    print(f'{current_user = }')
+    search_parameter = request.args.get('q') or request.form.get('q') or '*'
+    # stmt = '''SELECT * FROM messages
+    #           INNER JOIN users u on u.user_id = messages.sender_id
+    #           WHERE message_content GLOB (?)'''
+    #           # WHERE user_name = (?)
+    #           # '''
+
+    stmt = '''SELECT '''
+
     result = f"Query: {pygmentize(stmt)}\n"
     try:
         connection = apsw.Connection(DATABASE_NAME)
-        c = connection.execute(stmt, (search_paramter, ))
+        c = connection.execute(stmt, (current_user, ))
         rows = c.fetchall()
         result = result + 'Result:\n'
         for row in rows:
@@ -68,7 +76,7 @@ def search():
     except apsw.Error as e:
         return f'{result}ERROR: {e}', 500
 
-
+@login_required
 @routes.get('/announcements')
 def announcements():
     query = f"SELECT author,content FROM announcements;"
@@ -84,8 +92,8 @@ def announcements():
         return {'error': f'{e}'}
 
 
-@routes.get('/account')
 @login_required
+@routes.get('/account')
 def account():
     return render_template('account.html')
 
