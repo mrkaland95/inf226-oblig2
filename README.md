@@ -85,9 +85,9 @@ https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy
 
 ##### CSS
 
-https://www.w3schools.com/css/css_navbar_horizontal.asp
+[Navbar](https://www.w3schools.com/css/css_navbar_horizontal.asp)
 
-Top Nav Bar - https://www.w3schools.com/howto/howto_js_topnav.asp
+[Top Nav Bar](https://www.w3schools.com/howto/howto_js_topnav.asp)
 
 ##### Flask specific security
 
