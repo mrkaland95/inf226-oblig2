@@ -1,6 +1,9 @@
 import sys
 import apsw
 import hashlib
+
+from flask import current_app
+
 import app
 import bcrypt
 
@@ -28,28 +31,26 @@ def init_db():
             user_id         INTEGER PRIMARY KEY AUTOINCREMENT ,
             user_name       TEXT UNIQUE NOT NULL,
             password        BLOB NOT NULL,
+            time_created    NOT NULL DEFAULT CURRENT_TIMESTAMP,
             blocked_users   );''')
 
         cursor.execute('''  CREATE TABLE IF NOT EXISTS messages (
             message_id      INTEGER PRIMARY KEY AUTOINCREMENT,
             sender_id       INTEGER NOT NULL,
-            created_time    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            time_created    NOT NULL DEFAULT CURRENT_TIMESTAMP,
             message_content TEXT NOT NULL,
             FOREIGN KEY (sender_id) REFERENCES users(user_id));''')
 
         cursor.execute('''  CREATE TABLE IF NOT EXISTS announcements (
             announcement_id integer PRIMARY KEY AUTOINCREMENT, 
             author          TEXT NOT NULL,
+            created_time    NOT NULL DEFAULT CURRENT_TIMESTAMP,
             content         TEXT NOT NULL);''')
 
     except apsw.Error as e:
         print(f'The server was unable to initialize the database.')
         print(e)
         sys.exit(1)
-
-
-def get_announcements():
-    temp = 0
 
 
 def validate_login(username: str, password: str) -> bool:
@@ -71,13 +72,12 @@ def validate_login(username: str, password: str) -> bool:
         fetch_result = cursor.fetchone()
         if not fetch_result:
             return result
+
         password_in_db = fetch_result[0]
-        # result = True if password_in_db == password else False
         result = utils.check_password(password, password_in_db)
-
     except apsw.Error as err:
-        print(err)
-
+        current_app.logger.warning('There was an error when trying to validate a login.')
+        current_app.logger.warning(err)
     return result
 
 
@@ -104,7 +104,7 @@ def add_user_to_db(user_to_add: str, password_to_add: bytes):
     return successful
 
 
-def get_user_data_from_db(user):
+def get_user_data(user):
     found_user = None
     try:
         connection = apsw.Connection(DATABASE_NAME)
@@ -118,6 +118,20 @@ def get_user_data_from_db(user):
     return found_user
 
 
+def post_announcement(user_name, message_content):
+    successful = False
+    try:
+        connection = apsw.Connection(DATABASE_NAME)
+        cursor = connection.cursor()
+        query = '''INSERT INTO announcements (author, content) VALUES (?, ?)'''
+        cursor.execute(query, (user_name, message_content))
+        successful = True
+    except apsw.Error as err:
+        current_app.logger.warning(f'The was an error when inserting an announcement')
+        current_app.logger.warning(err)
+
+    return successful
+
 def get_users_messages(user_name):
     """
     Gets all of a user's messages.
@@ -130,7 +144,8 @@ def get_users_messages(user_name):
         cursor = connection.cursor()
         query = ''' SELECT *
                     FROM messages
-                    WHERE sender_id = (?)'''
+                    INNER JOIN users u on u.user_id = messages.sender_id
+                    WHERE user_name = (?)'''
 
         result = cursor.execute(query, (user_name,))
         result = result.fetchall()
@@ -138,7 +153,7 @@ def get_users_messages(user_name):
         print(err)
 
 
-def get_specific_message(message_id):
+def get_message_by_id(message_id):
     message = None
     try:
         connection = apsw.Connection(DATABASE_NAME)

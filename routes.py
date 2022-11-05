@@ -1,3 +1,4 @@
+import flask_login
 from flask_login import login_required
 
 import database
@@ -26,12 +27,6 @@ routes = flask.Blueprint('routes', __name__)
 def home():
     return send_from_directory(routes.root_path, 'templates/index.html', mimetype='text/html')
 
-#
-# @routes.post('/new')
-# def send_message():
-#     sender = request.args.get('sender')
-#
-
 
 @routes.route('/send', methods=['POST', 'GET'])
 def send():
@@ -46,24 +41,25 @@ def send():
         if not sender or not message:
             return f'ERROR: missing sender or message'
         database.send_message(sender, message)
-
-        # stmt = f"INSERT INTO messages (sender, message) values ('{sender}', '{message}');"
-        # result = f"Query: {pygmentize(stmt)}\n"
-        # cursor.execute(stmt)
         return f'{message} - ok'
     except apsw.Error as e:
         return f'ERROR: {e}'
 
 
+@login_required
 @routes.get('/search')
 @routes.get('/messages')
 def search():
+    current_user = flask_login.current_user
+    print(current_user)
     query = request.args.get('q') or request.form.get('q') or '*'
-    stmt = '''SELECT * FROM messages WHERE message_content GLOB (?)'''
+    stmt = '''SELECT * FROM messages
+              INNER JOIN users u on u.user_id = messages.sender_id
+              WHERE (message_content GLOB (?) AND user_name = (?))'''
     result = f"Query: {pygmentize(stmt)}\n"
     try:
         connection = apsw.Connection(DATABASE_NAME)
-        c = connection.execute(stmt, query)
+        c = connection.execute(stmt, (query, ))
         rows = c.fetchall()
         result = result + 'Result:\n'
         for row in rows:
@@ -76,15 +72,15 @@ def search():
 
 @routes.get('/announcements')
 def announcements():
-    query = f"SELECT author,text FROM announcements;"
+    query = f"SELECT author,content FROM announcements;"
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
         c = cursor.execute(query)
-        anns = []
+        announcements = []
         for row in c:
-            anns.append({'sender': escape(row[0]), 'message': escape(row[1])})
-        return {'data': anns}
+            announcements.append({'sender': escape(row[0]), 'message': escape(row[1])})
+        return {'data': announcements}
     except apsw.Error as e:
         return {'error': f'{e}'}
 

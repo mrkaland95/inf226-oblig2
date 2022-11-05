@@ -154,7 +154,7 @@ def request_loader(request):
 @app.login_manager.user_loader
 def user_loader(user_name):
     # THIS IS ONLY CALLED IF THE USER IS ALREADY AUTHENTICATED
-    found_user = database.get_user_data_from_db(user_name)
+    found_user = database.get_user_data(user_name)
 
     if not found_user:
         return found_user
