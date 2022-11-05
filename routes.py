@@ -1,10 +1,9 @@
 import flask_login
-from flask_login import login_required
-
 import database
 import forms
 import apsw
 import flask
+from flask_login import login_required
 from flask import abort, make_response, render_template, request, send_from_directory
 from json import dumps
 from pygments.formatters import HtmlFormatter
@@ -51,15 +50,15 @@ def send():
 @routes.get('/messages')
 def search():
     current_user = flask_login.current_user
-    print(current_user)
-    query = request.args.get('q') or request.form.get('q') or '*'
+    print(current_user.id)
+    search_paramter = request.args.get('q') or request.form.get('q') or '*'
     stmt = '''SELECT * FROM messages
               INNER JOIN users u on u.user_id = messages.sender_id
               WHERE (message_content GLOB (?) AND user_name = (?))'''
     result = f"Query: {pygmentize(stmt)}\n"
     try:
         connection = apsw.Connection(DATABASE_NAME)
-        c = connection.execute(stmt, (query, ))
+        c = connection.execute(stmt, (search_paramter, ))
         rows = c.fetchall()
         result = result + 'Result:\n'
         for row in rows:
@@ -94,6 +93,7 @@ def account():
 @routes.get('/coffee/')
 def nocoffee():
     abort(418)
+
 
 @routes.route('/coffee/', methods=['POST', 'PUT'])
 def gotcoffee():

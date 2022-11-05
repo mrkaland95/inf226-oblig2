@@ -1,13 +1,7 @@
 import sys
 import apsw
-import hashlib
-
-from flask import current_app
-
-import app
-import bcrypt
-
 import utils
+from flask import current_app
 
 
 DATABASE_NAME = './tiny.db'
@@ -53,22 +47,34 @@ def init_db():
         sys.exit(1)
 
 
-def validate_login(username: str, password: str) -> bool:
+def validate_login(user_id: str | int, password: str) -> bool:
     """
 
-    :param username: The user that is to be checked for in the database.
+    :param user_id: The user that is to be checked for in the database.
     :param password: The password that is to be checked.
     :return: Returns a bool if the login was valid or not.
     """
     result = False
+
+    query_username = \
+        ''' SELECT password
+            FROM users
+            WHERE user_name = (?)'''
+
+    query_id = \
+        ''' SELECT password
+            FROM users
+            WHERE user_id = (?)'''
+
+    if isinstance(user_id, str):
+        query = query_username
+    elif isinstance(user_id, int):
+        query = query_id
+
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
-        query = \
-            ''' SELECT password
-                FROM users
-                WHERE user_name = (?)'''
-        cursor.execute(query, (username,))
+        cursor.execute(query, (user_id,))
         fetch_result = cursor.fetchone()
         if not fetch_result:
             return result
@@ -104,15 +110,41 @@ def add_user_to_db(user_to_add: str, password_to_add: bytes):
     return successful
 
 
-def get_user_data(user):
+def get_user_data(user: str | int):
+
+    # This is an absolute horrible workaround for the user being passed as an int value,
+    # but not of the int type
+    try:
+        user = int(user)
+    except ValueError:
+        pass
+
     found_user = None
+
+    query_id = '''
+    SELECT *
+    FROM users
+    WHERE (user_id) = (?)'''
+
+    query_user_name = '''
+        SELECT *
+        FROM users
+        WHERE (user_name) = (?)'''
+
+    if isinstance(user, int):
+        query = query_id
+    else:
+        query = query_user_name
+
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
-        found_user = cursor.execute('''
-                    SELECT *
-                    FROM users
-                    WHERE (user_name) = (?)''', (user,))
+        result = cursor.execute(query, (user, ))
+
+        if not result:
+            return found_user
+
+        found_user = result.fetchone()
     except apsw.Error as err:
         print(err)
     return found_user
@@ -139,6 +171,7 @@ def get_users_messages(user_name):
     :param user_name:
     :return:
     """
+    result = None
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
@@ -148,9 +181,15 @@ def get_users_messages(user_name):
                     WHERE user_name = (?)'''
 
         result = cursor.execute(query, (user_name,))
+
+        if not result:
+            return None
+
         result = result.fetchall()
+
     except apsw.Error as err:
         print(err)
+    return result
 
 
 def get_message_by_id(message_id):

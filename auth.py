@@ -19,17 +19,6 @@ File for handling the login side of the app.
 auth = Blueprint('auth', __name__)
 
 
-# FIXME remove this once implemented the database.
-users = {'alice': {'password': 'password123', 'token': 'tiktok'},
-         'bob': {'password': 'bananas'}}
-
-# Class to store user info
-# UserMixin provides us with an `id` field and the necessary
-# methods (`is_authenticated`, `is_active`, `is_anonymous` and `get_id()`)
-class User(flask_login.UserMixin):
-    pass
-
-
 @auth.route('/register', methods=['GET', 'POST'])
 def register():
     form = forms.RegistrationForm()
@@ -62,23 +51,23 @@ def register():
 def login():
     form = forms.LoginForm()
     redirect_to_login = render_template('login.html', title='Wannabe Discord Login', form=form)
-    # if form.is_submitted():
-    #     print(f'Received form: {"invalid" if not form.validate() else "valid"} {form.form_errors} {form.errors}')
-    #     print(request.form)
 
     if not form.validate_on_submit():
+        current_app.logger.info(f'Invalid login attempt.')
         return redirect_to_login
 
     username = form.username.data
     password = form.password.data
 
     valid_login = database.validate_login(username, password)
+    f'{valid_login = }'
 
     if not valid_login:
         flash('Login was unsuccessful. Please check username and password.')
         return redirect_to_login
 
     user = user_loader(username)
+
     if not user:
         flash('Something went wrong when loading the user on the server.')
         return redirect_to_login
@@ -88,7 +77,6 @@ def login():
     flask.flash('Logged in successfully.')
     next_request = flask.request.args.get('next')
 
-    # TODO have a look at this.
     # is_safe_url should check if the url is safe for redirects.
     # See http://flask.pocoo.org/snippets/62/ for an example.
     if False and not is_safe_url(next_request):
@@ -109,7 +97,7 @@ def logout():
 # than getting the user name the standard way (from the session cookie)
 @app.login_manager.request_loader
 def request_loader(request):
-    print(request.headers)
+    # print(request.headers)
     # Even though this HTTP header is primarily used for *authentication*
     # rather than *authorization*, it's still called "Authorization".
     auth = request.headers.get('Authorization')
@@ -123,20 +111,12 @@ def request_loader(request):
     auth_scheme = auth_scheme.casefold()
     if auth_scheme == 'basic':  # Basic auth has username:password in base64
         (uid, passwd) = b64decode(auth_params.encode(errors='ignore')).decode(errors='ignore').split(':', maxsplit=1)
+        print(f'{uid = }')
         print(f'Basic auth: {uid}:{passwd}')
-        u = users.get(uid)
-        if u:  # and check_password(u.password, passwd):
+
+        if database.validate_login(uid, passwd):  # and check_password(u.password, passwd):
             return user_loader(uid)
 
-    elif auth_scheme == 'bearer':  # Bearer auth contains an access token;
-        # an 'access token' is a unique string that both identifies
-        # and authenticates a user, so no username is provided (unless
-        # you encode it in the token – see JWT (JSON Web Token), which
-        # encodes credentials and (possibly) authorization info)
-        print(f'Bearer auth: {auth_params}')
-        for uid in users:
-            if users[uid].get('token') == auth_params:
-                return user_loader(uid)
     # For other authentication schemes, see
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication
 
@@ -152,15 +132,22 @@ def request_loader(request):
 
 
 @app.login_manager.user_loader
-def user_loader(user_name):
-    # THIS IS ONLY CALLED IF THE USER IS ALREADY AUTHENTICATED
-    found_user = database.get_user_data(user_name)
+def user_loader(uid):
+    found_user = database.get_user_data(uid)
 
     if not found_user:
-        return found_user
+        return
 
     user = User()
-    user.id = found_user
+    user.id = found_user[0]
+    user.username = found_user[1]
     return user
+
+
+class User(flask_login.UserMixin):
+    username: str
+    time_created: str
+
+    pass
 
 
