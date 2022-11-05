@@ -109,7 +109,6 @@ def logout():
 # than getting the user name the standard way (from the session cookie)
 @app.login_manager.request_loader
 def request_loader(request):
-
     print(request.headers)
     # Even though this HTTP header is primarily used for *authentication*
     # rather than *authorization*, it's still called "Authorization".
