@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+{% block header %}
 <head>
 	<link rel="icon" href="favicon.png" type="image/png" />
     <link rel="stylesheet" href="highlight.css" />
@@ -13,11 +14,15 @@
     <link rel="stylesheet" href="highlight.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
-<body class=body>
-<div class="topnav">
+{% endblock header %}
+{% block body %}
 
+
+<body class=body>
+<!--Defining the navbar-->
+<div class="topnav">
+    <!--Left side of the navbar-->
   <a href="{{ url_for('routes.home') }} ">Home</a>
-<!--  <a class="active" href="#home">Home</a>-->
   <a href="{{ url_for('routes.account') }}">Account</a>
 
     <!--Right side of the navbar-->
@@ -29,9 +34,7 @@
     <a class=split href="{{ url_for('auth.login') }}">Log In</a>
     {% endif %}
     </div>
-
 </div>
-
 <div class="center_element">
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
@@ -47,6 +50,7 @@
 {% endblock content %}
 </div>
 </body>
+{% endblock %}
 {% block script %}
 {% endblock script %}
 </html>

@@ -1,24 +1,24 @@
-{% extends "base.html" %}
+{% extends "layout.html" %}
 {% block content %}
 <div id="page">
     <marquee>
         <div id="header"></div>
     </marquee>
-    <main>
-        <pre id="output"></pre>
-    </main>
-    <div id="controls">
-        <label for="message">Message:</label>
-        <textarea id="message" style="grid-row: span 5;">A message...</textarea>
-{#        <input type="text" id="sender" name="sender" value="Alice">#}
-{#        <label for="search">Search:</label>#}
-{#        <button type="button" id="sendBtn">Send</button>#}
-{#        <input type="search" id="search" name="search" enterkeyhint="search" value="">#}
-{#        <button type="button" id="searchBtn">Search!</button>#}
-{#        <button type="button" id="allBtn">Show all</button>#}
-{#        <label for="sender">From:</label>#}
-{#        <span></span>#}
+    <div>
+        <ul id="messages" class="messages">Messages</ul>
     </div>
+{#    <div id="controls">#}
+{#        <label for="message">Message:</label>#}
+{#        <textarea id="message" style="grid-area: span;"></textarea>#}
+<!--{#        <input type="text" id="sender" name="sender" value="Alice">#}-->
+<!--{#        <label for="search">Search:</label>#}-->
+<!--{#        <button type="button" id="sendBtn">Send</button>#}-->
+<!--{#        <input type="search" id="search" name="search" enterkeyhint="search" value="">#}-->
+<!--{#        <button type="button" id="searchBtn">Search!</button>#}-->
+<!--{#        <button type="button" id="allBtn">Show all</button>#}-->
+<!--{#        <label for="sender">From:</label>#}-->
+<!--{#        <span></span>#}-->
+{#    </div>#}
     <div id="anchor"></div>
 </div>
 {% endblock content %}
@@ -35,6 +35,20 @@
     var allBtn = document.getElementById('allBtn');
     var output = document.getElementById('output');
     var header = document.getElementById('header');
+
+    var getCurrentUsersMessages = async () => {
+        res = await fetch('/messages')
+        anns = await res.json()
+        if (anns && Array.isArray(anns.data)) {
+            elements = [];
+            for (const element of arguments) {
+                let node = document.createElement('li')
+                node.textContent = ' ...  '
+                let underNode = document.createElement('li');
+                underNode.textContent = `${element.message || ''}`;
+            }
+        }
+    }
 
     var checkAnnouncements = async () => {
         res = await fetch('/announcements');
@@ -94,7 +108,8 @@
     searchBtn.addEventListener('click', () => search(searchField.value));
     allBtn.addEventListener('click', () => search('*'));
     sendBtn.addEventListener('click', () => send(senderField.value, messageField.value));
-    checkAnnouncements();
+    {#checkAnnouncements();#}
+    getCurrentUsersMessages();
 </script>
 
 {% endblock script %}

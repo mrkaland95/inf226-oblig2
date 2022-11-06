@@ -1,6 +1,11 @@
 ### Part 2B
 
-##### Threat Model.
+##### Threat Model
+
+###### Who would attack the server?
+
+
+
 
 
 ##### Features - Implemented and planned
@@ -23,10 +28,6 @@ Currently the home/message page doesen't really work, but the methods for the AP
 
 Admittedly i'd have like to have implemented more/better, but simply did not have the time.
 
-
-##### Threat model
-
-###### Who would attack the server?
 
 ##### Access Control Model
 

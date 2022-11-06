@@ -3,8 +3,9 @@
     }
 
     .body {
-        background-color: #050e1c;
+        background-color: rgba(9, 7, 7, 0.93);
         color: #dddddd;
+        outline: #0e624c;
         margin: 0;
     }
 
@@ -46,6 +47,12 @@
 
     }
 
+    .columns {
+        float: left;
+        width: 33.3%;
+        padding: 8px;
+    }
+
     #output {
         width: 100%;
         height: 100%;
@@ -60,7 +67,7 @@
     #header {
         display: flex;
         flex-direction: row;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
     }
 
     #header li {
@@ -84,6 +91,8 @@
         text-decoration: none;
         font-size: 17px;
     }
+
+
 
     .topnav a:hover {
       background-color: #ddd;

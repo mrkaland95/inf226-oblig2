@@ -39,19 +39,22 @@ def send():
     if not message or recipient:
         return f'ERROR: missing message or recipient'
     database.send_message(sender, recipient, message)
-    return f'sent message: {message} - ok'
+    return f'sent message: {message} - OK'
 
 
-@routes.get('/messages')
-@routes.get('/messages/int:<ID>')
+@routes.route('/messages')
+@routes.route('/messages/int:<ID>')
 @login_required
-def search():
+def get_messages(message_id=0):
     current_user = flask_login.current_user.id
     result = ""
-
-
-    rows = database.get_users_messages(current_user)
-    for row in rows:
+    if message_id:
+        data = database.get_message_by_id(current_user, message_id)
+    else:
+        data = database.get_users_messages(current_user)
+    if not data:
+        abort(404)
+    for row in data:
         result = f'{dumps(row)}\n'
     return result
 

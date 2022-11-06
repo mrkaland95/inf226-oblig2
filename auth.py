@@ -44,6 +44,10 @@ def register():
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
+
+    if current_user.is_authenticated:
+        flask.redirect(flask.url_for('routes.home'))
+
     form = forms.LoginForm()
     redirect_to_login = render_template('login.html', title='Wannabe Discord Login', form=form)
 
@@ -70,12 +74,9 @@ def login():
         flask.flash('Logged in successfully.')
         next_request = flask.request.args.get('next')
 
-        # is_safe_url should check if the url is safe for redirects.
-        # See http://flask.pocoo.org/snippets/62/ for an example.
-        # if False and not is_safe_url(next_request):
+        # Implementation of the safe URL function in utils.
         if not is_safe_url(next_request):
             return flask.abort(400)
-        current_app.logger.info(f'Invalid login attempt.')
         return flask.redirect(next_request or flask.url_for('routes.home'))
     return redirect_to_login
 
