@@ -1,18 +1,6 @@
-### Part 2A:
-
-
-
 ### Part 2B
-I decided to use the flask blueprints the various utilties of the server into separate files
 
-1. Things like the database code in it's own file, the frontend forms.
-Authentication related code in the "auth" file.
-Other routes in the "routes file."
-Then lastly, various smaller utility functions in the "utils" file.
-
-2. I also implemented hashing and salting for passwords when they are inserted into the database.
-
-3. Implemented prepared statements for all queries to the database.
+##### Threat Model.
 
 
 ##### Features - Implemented and planned
@@ -29,9 +17,48 @@ Lastly for the message system, which i originally intended to be a little bit li
 
 But at the time of writing this ended up more like an email client or something.
 
+I.e have a form that would display all the messages sent to the currently logged in user, with the recipient, time stamp etc.
+
+Currently the home/message page doesen't really work, but the methods for the API are more or less implemented.
+
 Admittedly i'd have like to have implemented more/better, but simply did not have the time.
 
-##### Notes about security.
+
+##### Threat model
+
+###### Who would attack the server?
+
+##### Access Control Model
+
+The Access Control Model, in simple terms, the process of verifying that the entity that is trying to access a resource,
+
+has the permissions to do so. This is often implemented through a username/password, but can also be done with thinks like API keys.
+
+Then, once authorized, the server/system, will give back the requested resource.
+
+Of course, in this model, you can have various levels of permissions, for example a regular user would not have the same permissions
+
+as an admin/root user.
+
+##### Main Attack Vectors
+
+In no particular order:
+
+Weak or compromised credentials, pretty much the most common way that unauthorized access to a system is gained.
+
+This can for example happen beacuse of a poor password, or alternatively when credentials have been leaked from other databases,
+
+which are then used somewhere else.
+
+Lack of encryption, specifically lack of use of TLS/HTTPS
+
+SQL injections
+
+DDoS attacks
+
+Malware/Ransomware
+
+##### Steps taken towards attack vectors
 
 1. Prepared statements have been implemented for all queries that are sent to the database, and atleast while testing
     with SQLmap i did not find any sql injections.
@@ -43,11 +70,9 @@ Admittedly i'd have like to have implemented more/better, but simply did not hav
     So obviously during an actual deployment, the server would have TLS certificate implemented to ensure this cannot happen.
     Notes on this here: https://developer.mozilla.org/en-US/docs/Web/Security/Insecure_passwords
 
-4. From my basic understanding of XSS and testing in the various forms i did not find
+4. From my basic understanding of XSS and testing in the various form i didn't see any obvious opportunities to use it.
 
-##### Threat model
-
-Data in my application goes like this
+5. I *think* CSRF vulnerabilities should be handled for the various forms, with CSRF tokens added. 
 
 
 ### Setting up and running the server
@@ -76,12 +101,6 @@ NOTE: The program was worked on and ran with Windows 10/11.
 Tested with Python 3.9, but it *should* work back to version 3.7 or so i believe.
 
 Also, i have absolutely no clue whether it works for Linux/macOS, only tested with Windows.
-
-
-
-
-
-
 
 
 Various sources and resources used:

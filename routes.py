@@ -23,7 +23,7 @@ routes = flask.Blueprint('routes', __name__)
 @routes.route('/home')
 @login_required
 def home():
-    return send_from_directory(routes.root_path, 'templates/index.html', mimetype='text/html')
+    return render_template('index.html', mimetype='text/html')
 
 
 @routes.route('/new', methods=['POST', 'GET'])
