@@ -3,7 +3,8 @@
     }
 
     .body {
-        color: #1c2f49;
+        background-color: #1c2f49;
+        color: #dddddd;
         margin: 0;
     }
 
@@ -76,12 +77,12 @@
 }
 
     .topnav a {
-      float: left;
-      color: #f2f2f2;
-      text-align: center;
-      padding: 14px 16px;
-      text-decoration: none;
-      font-size: 17px;
+        float: left;
+        color: #f2f2f2;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+        font-size: 17px;
     }
 
     .topnav a:hover {

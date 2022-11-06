@@ -1,6 +1,5 @@
 import flask_login
 import database
-import forms
 import apsw
 import flask
 from flask_login import login_required
@@ -19,16 +18,18 @@ File for handling the URL routes.
 routes = flask.Blueprint('routes', __name__)
 
 
-@login_required
+
 @routes.route('/')
 @routes.route('/index.html')
 @routes.route('/home')
+@login_required
 def home():
     return send_from_directory(routes.root_path, 'templates/index.html', mimetype='text/html')
 
 
-@login_required
+
 @routes.route('/send', methods=['POST', 'GET'])
+@login_required
 def send():
     """
     Route responsible for sending a message.
@@ -47,23 +48,20 @@ def send():
         return f'ERROR: {e}'
 
 
-@login_required
+
 @routes.get('/search')
 @routes.get('/messages')
 @routes.get('/messages/int:<ID>')
+@login_required
 def search():
     current_user = flask_login.current_user.id
-    print(f'{current_user = }')
     search_parameter = request.args.get('q') or request.form.get('q') or '*'
-    # stmt = '''SELECT * FROM messages
-    #           INNER JOIN users u on u.user_id = messages.sender_id
-    #           WHERE message_content GLOB (?)'''
-    #           # WHERE user_name = (?)
-    #           # '''
-
-    stmt = '''SELECT '''
+    stmt = '''SELECT * FROM messages
+              INNER JOIN users u on u.user_id = messages.sender_id
+              WHERE message_content GLOB (?)'''
 
     result = f"Query: {pygmentize(stmt)}\n"
+    print(result)
     try:
         connection = apsw.Connection(DATABASE_NAME)
         c = connection.execute(stmt, (current_user, ))
@@ -76,8 +74,9 @@ def search():
     except apsw.Error as e:
         return f'{result}ERROR: {e}', 500
 
-@login_required
+
 @routes.get('/announcements')
+@login_required
 def announcements():
     query = f"SELECT author,content FROM announcements;"
     try:
@@ -91,9 +90,8 @@ def announcements():
     except apsw.Error as e:
         return {'error': f'{e}'}
 
-
-@login_required
 @routes.get('/account')
+@login_required
 def account():
     return render_template('account.html')
 

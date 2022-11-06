@@ -15,26 +15,46 @@ Then lastly, various smaller utility functions in the "utils" file.
 3. Implemented prepared statements for all queries to the database.
 
 
-Notes about security.
-1.Prepared statements have been implemented for all queries that are sent to the database.
+##### Features - Implemented and planned
+
+So far i have implemented login and the ability to register new accounts, which are stored in an SQLite database.
+
+There's also the ability to logout, which will reroute to the login page.
+
+Planned was also the ability to have an account page, with perhaps ability to change some preferences etc.
+
+There is also some logging adding, but not as much as i'd like to have.
+
+Lastly for the message system, which i originally intended to be a little bit like Discord.
+
+But at the time of writing this ended up more like an email client or something.
+
+Admittedly i'd have like to have implemented more/better, but simply did not have the time.
+
+##### Notes about security.
+
+1. Prepared statements have been implemented for all queries that are sent to the database, and atleast while testing
+    with SQLmap i did not find any sql injections.
+
 2. Passwords are salted and hashed before being stored in the database, ensuring that even if a leak were to happen,
     the user's credentials cannot be used at another website.
 
-3. The user password can still get leaked during transit from the client, since the current implementation only uses HTTP, with no TLS
+3. The plaintext user password can still get leaked during transit from the client, since the current implementation only uses HTTP, with no TLS
     So obviously during an actual deployment, the server would have TLS certificate implemented to ensure this cannot happen.
     Notes on this here: https://developer.mozilla.org/en-US/docs/Web/Security/Insecure_passwords
+
+4. From my basic understanding of XSS and testing in the various forms i did not find
+
+##### Threat model
+
+Data in my application goes like this
+
 
 
 ### Setting up and running the server
 
-The server includes a server.py script, so all *should* be necessary to run it, 
-is to run the following command(while being in the "oblig2" as your working directory in your shell.)
+The following libraries are used outside of the standard library. To install them, run the following commands.
 
-`python setup.py install`
-
-NOTE: You may or may not need to have your shell
-
-If that doesen't work, the required libraries to run the server outside of the standard library are as follows:
 
 `pip install flask`
 
@@ -48,12 +68,21 @@ If that doesen't work, the required libraries to run the server outside of the s
 
 `pip install bcrypt`
 
+`pip install pygments`
 
 Then, once all the packages are installed, navigate to the oblig2 folder and run the "flask run". Now the server *should* be up and running.
 
 NOTE: The program was worked on and ran with Windows 10/11.
 
-I have absolutely no clue whether it works for Linux/macOS
+Tested with Python 3.9, but it *should* work back to version 3.7 or so i believe.
+
+Also, i have absolutely no clue whether it works for Linux/macOS, only tested with Windows.
+
+
+
+
+
+
 
 
 Various sources and resources used:

@@ -5,9 +5,9 @@ import database
 import app
 import forms
 import utils
-from flask import flash,  render_template, Blueprint, request, current_app
+from flask import flash,  render_template, Blueprint, current_app
 from http import HTTPStatus
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, login_required, current_user, user_logged_in
 from werkzeug.datastructures import WWWAuthenticate
 from base64 import b64decode
 
@@ -41,49 +41,50 @@ def register():
     flash(f'Account created. You should now be able to log in.')
     return flask.redirect(flask.url_for('auth.login'))
 
-
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
     form = forms.LoginForm()
     redirect_to_login = render_template('login.html', title='Wannabe Discord Login', form=form)
 
-    if not form.validate_on_submit():
+    if form.validate_on_submit():
+
+        username = form.username.data
+        password = form.password.data
+
+        valid_login = database.validate_login(username, password)
+
+        if not valid_login:
+            flash('Login was unsuccessful. Please check username and password.')
+            time.sleep(0.05)
+            return redirect_to_login
+
+        user = user_loader(username)
+
+        if not user:
+            flash('Something went wrong when loading the user on the server.')
+            return redirect_to_login
+
+        # automatically sets logged in session cookie
+        login_user(user)
+        flask.flash('Logged in successfully.')
+        next_request = flask.request.args.get('next')
+
+        # is_safe_url should check if the url is safe for redirects.
+        # See http://flask.pocoo.org/snippets/62/ for an example.
+        if False and not is_safe_url(next_request):
+            return flask.abort(400)
         current_app.logger.info(f'Invalid login attempt.')
-        return redirect_to_login
-
-    username = form.username.data
-    password = form.password.data
-
-    valid_login = database.validate_login(username, password)
-
-    if not valid_login:
-        flash('Login was unsuccessful. Please check username and password.')
-        return redirect_to_login
-
-    user = user_loader(username)
-
-    if not user:
-        flash('Something went wrong when loading the user on the server.')
-        return redirect_to_login
-
-    # automatically sets logged in session cookie
-    login_user(user)
-    flask.flash('Logged in successfully.')
-    time.sleep(0.05)
-    next_request = flask.request.args.get('next')
-
-    # is_safe_url should check if the url is safe for redirects.
-    # See http://flask.pocoo.org/snippets/62/ for an example.
-    if False and not is_safe_url(next_request):
-        return flask.abort(400)
-
-    return flask.redirect(next_request or flask.url_for('routes.home'))
+        return flask.redirect(next_request or flask.url_for('routes.home'))
+    return redirect_to_login
 
 
 @auth.route('/logout')
+@login_required
 def logout():
-    logout_user()
-    flash('Logged out successfully.')
+    if user_logged_in:
+        logout_user()
+        flash('Logged out successfully.')
+        time.sleep(0.05)
     return flask.redirect(flask.url_for('auth.login'))
 
 

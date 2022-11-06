@@ -32,8 +32,10 @@ def init_db():
         cursor.execute('''  CREATE TABLE IF NOT EXISTS messages (
             message_id      INTEGER PRIMARY KEY AUTOINCREMENT,
             sender_id       INTEGER NOT NULL,
+            recipient_id    INTEGER NOT NULL,
             time_created    NOT NULL DEFAULT CURRENT_TIMESTAMP,
             message_content TEXT NOT NULL,
+            FOREIGN KEY (recipient_id) REFERENCES users(user_id),
             FOREIGN KEY (sender_id) REFERENCES users(user_id));''')
 
         cursor.execute('''  CREATE TABLE IF NOT EXISTS announcements (

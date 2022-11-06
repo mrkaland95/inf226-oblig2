@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import os
 import pathlib
 import secrets
-import bcrypt
 import threading
+import bcrypt
 from pygments import highlight
 from pygments.filters import KeywordCaseFilter, NameHighlightFilter
 from pygments.formatters.html import HtmlFormatter
