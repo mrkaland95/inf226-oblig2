@@ -4,8 +4,27 @@
 
 ###### Who would attack the server?
 
+Attackers often attack a web server for a few reasons.
 
+1. For monetary gain, by for example stealing information from the server, and/or installing ransomware.
 
+2. People that for whatever reason do not like the service and their provider, often doing DoS attacks for example.
+
+3. For the fun/challenge of it.
+
+###### What can an attack do?
+
+This highly depends on the specific vulnerability/exploit used.
+
+But an attacker could for example use my server to get information from the database, which could then be used in other, more important places.
+
+Or more maliciously, if they got control of the server, they could send out malicious HTML to users for example.
+
+###### Are there limits to what we can sensibly protect against?
+
+Sure, attackers can often find creative avenues to find new exploits, but even disregarding that,
+
+it's difficult to protect against very large scale DDoS attacks for example, even though they can be mitigated.
 
 
 ##### Features - Implemented and planned
@@ -24,7 +43,8 @@ But at the time of writing this ended up more like an email client or something.
 
 I.e have a form that would display all the messages sent to the currently logged in user, with the recipient, time stamp etc.
 
-Currently the home/message page doesen't really work, but the methods for the API are more or less implemented.
+Huge caveat though, the main function of the server isn't really functioning, i.e the message board that is supposed to show all the messages etc.
+
 
 Admittedly i'd have like to have implemented more/better, but simply did not have the time.
 
