@@ -50,7 +50,6 @@ Admittedly i'd have like to have implemented more/better, but simply did not hav
 Data in my application goes like this
 
 
-
 ### Setting up and running the server
 
 The following libraries are used outside of the standard library. To install them, run the following commands.

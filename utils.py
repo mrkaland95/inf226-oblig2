@@ -4,7 +4,10 @@ import os
 import pathlib
 import secrets
 import threading
+from urllib.parse import urlparse, urljoin
+
 import bcrypt
+from flask import request
 from pygments import highlight
 from pygments.filters import KeywordCaseFilter, NameHighlightFilter
 from pygments.formatters.html import HtmlFormatter
@@ -27,6 +30,13 @@ def pygmentize(text):
         tls.lexer.add_filter(NameHighlightFilter(names=['text'], tokentype=token.Name))
         tls.lexer.add_filter(KeywordCaseFilter(case='upper'))
     return f'<span class="highlight">{highlight(text, tls.lexer, tls.formatter)}</span>'
+
+
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and \
+           ref_url.netloc == test_url.netloc
 
 
 def get_secret_key(file_path: pathlib.Path):

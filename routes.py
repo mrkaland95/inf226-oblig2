@@ -31,15 +31,14 @@ def home():
 def send():
     """
     Route responsible for sending a message.
-
     :return:
     """
-    current_user = flask_login.current_user.id
-    message = request.args.get('message') or request.args.get('message')
-    recipient = request.args.get('recipient') or request.args.get('recipient')
-    if not message:
-        return f'ERROR: missing message'
-    database.send_message(current_user, message)
+    sender = flask_login.current_user.id
+    message = request.args.get('message') or request.form.get('message')
+    recipient = request.args.get('recipient') or request.form.get('recipient')
+    if not message or recipient:
+        return f'ERROR: missing message or recipient'
+    database.send_message(sender, recipient, message)
     return f'sent message: {message} - ok'
 
 
@@ -49,29 +48,29 @@ def send():
 def search():
     current_user = flask_login.current_user.id
     result = ""
-    try:
-        rows = database.get_users_messages(current_user)
-        for row in rows:
-            result = f'{dumps(row)}\n'
-        return result
-    except apsw.Error as e:
-        return f'{result}ERROR: {e}', 500
+
+
+    rows = database.get_users_messages(current_user)
+    for row in rows:
+        result = f'{dumps(row)}\n'
+    return result
+
 
 
 @routes.get('/announcements')
-@login_required
-def announcements():
-    query = f"SELECT author,content FROM announcements;"
-    try:
-        connection = apsw.Connection(DATABASE_NAME)
-        cursor = connection.cursor()
-        c = cursor.execute(query)
-        announcements = []
-        for row in c:
-            announcements.append({'sender': escape(row[0]), 'message': escape(row[1])})
-        return {'data': announcements}
-    except apsw.Error as e:
-        return {'error': f'{e}'}
+# @login_required
+# def announcements():
+#     query = f"SELECT author,content FROM announcements;"
+#     try:
+#         connection = apsw.Connection(DATABASE_NAME)
+#         cursor = connection.cursor()
+#         c = cursor.execute(query)
+#         announcements = []
+#         for row in c:
+#             announcements.append({'sender': escape(row[0]), 'message': escape(row[1])})
+#         return {'data': announcements}
+#     except apsw.Error as e:
+#         return {'error': f'{e}'}
 
 @routes.get('/account')
 @login_required

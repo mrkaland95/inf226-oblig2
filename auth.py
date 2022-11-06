@@ -10,6 +10,7 @@ from http import HTTPStatus
 from flask_login import login_user, logout_user, login_required, current_user, user_logged_in
 from werkzeug.datastructures import WWWAuthenticate
 from base64 import b64decode
+from utils import is_safe_url
 
 """
 File for handling the login side of the app.
@@ -71,7 +72,8 @@ def login():
 
         # is_safe_url should check if the url is safe for redirects.
         # See http://flask.pocoo.org/snippets/62/ for an example.
-        if False and not is_safe_url(next_request):
+        # if False and not is_safe_url(next_request):
+        if not is_safe_url(next_request):
             return flask.abort(400)
         current_app.logger.info(f'Invalid login attempt.')
         return flask.redirect(next_request or flask.url_for('routes.home'))
