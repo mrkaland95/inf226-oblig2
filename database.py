@@ -31,18 +31,18 @@ def init_db():
 
         cursor.execute('''  CREATE TABLE IF NOT EXISTS messages (
             message_id      INTEGER PRIMARY KEY AUTOINCREMENT,
-            sender_id       INTEGER NOT NULL,
-            recipient_id    INTEGER NOT NULL,
+            sender_name     TEXT NOT NULL,
+            recipient_name  TEXT NOT NULL,
             time_created    NOT NULL DEFAULT CURRENT_TIMESTAMP,
             message_content TEXT NOT NULL,
-            FOREIGN KEY (recipient_id) REFERENCES users(user_id),
-            FOREIGN KEY (sender_id) REFERENCES users(user_id));''')
+            FOREIGN KEY (sender_name) REFERENCES users(user_name),
+            FOREIGN KEY (recipient_name) REFERENCES users(user_name));''')
 
         cursor.execute('''  CREATE TABLE IF NOT EXISTS announcements (
             announcement_id integer PRIMARY KEY AUTOINCREMENT, 
-            author          TEXT NOT NULL,
+            author_name     TEXT NOT NULL,
             created_time    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            content         TEXT NOT NULL);''')
+            announcement_content     TEXT NOT NULL);''')
 
     except apsw.Error as e:
         print(f'The server was unable to initialize the database.')
@@ -64,15 +64,6 @@ def validate_login(user_id: str, password: str) -> bool:
             FROM users
             WHERE user_name = (?)'''
 
-    # query_id = \
-    #     ''' SELECT password
-    #         FROM users
-    #         WHERE user_id = (?)'''
-    #
-    # if isinstance(user_id, str):
-    #     query = query_username
-    # elif isinstance(user_id, int):
-    #     query = query_id
 
     try:
         connection = apsw.Connection(DATABASE_NAME)
@@ -162,14 +153,12 @@ def get_user_data_by_id(user_id: int):
         current_app.logger.warning(err)
     return found_user
 
-
-
 def post_announcement(user_name, message_content):
     successful = False
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
-        query = '''INSERT INTO announcements (author, content) VALUES (?, ?)'''
+        query = '''INSERT INTO announcements (author_name, announcement_content) VALUES (?, ?)'''
         cursor.execute(query, (user_name, message_content))
         successful = True
     except apsw.Error as err:
@@ -191,11 +180,8 @@ def get_users_messages(user_name):
         cursor = connection.cursor()
         query = ''' SELECT *
                     FROM messages
-                    INNER JOIN users u on u.user_id = messages.sender_id
-                    WHERE user_name = (?)'''
-
+                    WHERE recipient_name = (?)'''
         result = cursor.execute(query, (user_name,))
-
         if not result:
             return None
 
@@ -208,16 +194,16 @@ def get_users_messages(user_name):
 
 
 
-def get_message_by_id(message_id):
+def get_message_by_id(username, message_id):
     message = None
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
         query = ''' SELECT *
                     FROM messages
-                    WHERE message_id = (?)
+                    WHERE message_id = (?) AND recipient_name = (?)
                 '''
-        result = cursor.execute(query, (message_id,))
+        result = cursor.execute(query, (message_id, username))
         if result:
             message = result.fetchone()
     except apsw.Error as err:
@@ -225,14 +211,14 @@ def get_message_by_id(message_id):
     return message
 
 
-def send_message(sender, message):
+def send_message(sender, recipient, message):
     successful = False
     try:
         connection = apsw.Connection(DATABASE_NAME)
         cursor = connection.cursor()
-        query = '''INSERT INTO messages (sender_id, message_content) 
-                   VALUES (?, ?);'''
-        cursor.execute(query, (sender, message))
+        query = '''INSERT INTO messages (sender_name, recipient_name, message_content)
+                    VALUES (?, ?, ?)'''
+        result = cursor.execute(query, (sender, recipient, message))
         successful = True
     except apsw.Error as err:
         print(err)

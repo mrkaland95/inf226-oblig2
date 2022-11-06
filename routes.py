@@ -18,7 +18,6 @@ File for handling the URL routes.
 routes = flask.Blueprint('routes', __name__)
 
 
-
 @routes.route('/')
 @routes.route('/index.html')
 @routes.route('/home')
@@ -27,8 +26,7 @@ def home():
     return send_from_directory(routes.root_path, 'templates/index.html', mimetype='text/html')
 
 
-
-@routes.route('/send', methods=['POST', 'GET'])
+@routes.route('/new', methods=['POST', 'GET'])
 @login_required
 def send():
     """
@@ -36,40 +34,25 @@ def send():
 
     :return:
     """
-    try:
-        current_user = flask_login.current_user.id
-        sender = request.args.get('sender') or request.form.get('sender')
-        message = request.args.get('message') or request.args.get('message')
-        if not sender or not message:
-            return f'ERROR: missing sender or message'
-        database.send_message(current_user, message)
-        return f'{message} - ok'
-    except apsw.Error as e:
-        return f'ERROR: {e}'
+    current_user = flask_login.current_user.id
+    message = request.args.get('message') or request.args.get('message')
+    recipient = request.args.get('recipient') or request.args.get('recipient')
+    if not message:
+        return f'ERROR: missing message'
+    database.send_message(current_user, message)
+    return f'sent message: {message} - ok'
 
 
-
-@routes.get('/search')
 @routes.get('/messages')
 @routes.get('/messages/int:<ID>')
 @login_required
 def search():
     current_user = flask_login.current_user.id
-    search_parameter = request.args.get('q') or request.form.get('q') or '*'
-    stmt = '''SELECT * FROM messages
-              INNER JOIN users u on u.user_id = messages.sender_id
-              WHERE message_content GLOB (?)'''
-
-    result = f"Query: {pygmentize(stmt)}\n"
-    print(result)
+    result = ""
     try:
-        connection = apsw.Connection(DATABASE_NAME)
-        c = connection.execute(stmt, (current_user, ))
-        rows = c.fetchall()
-        result = result + 'Result:\n'
+        rows = database.get_users_messages(current_user)
         for row in rows:
-            result = f'{result}   {dumps(row)}\n'
-        c.close()
+            result = f'{dumps(row)}\n'
         return result
     except apsw.Error as e:
         return f'{result}ERROR: {e}', 500
